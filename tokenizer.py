@@ -18,17 +18,22 @@ class TokenType(enum.Enum):
     UNKNOWN = 0
     EOF = 1
     EOL = 2
-    OPEN_PAR = 3
-    CLOSING_PAR = 4
-    NAME = 5
-    INT = 6
-    FLOAT = 7
-    STRING = 8
-    ADD = 9
-    SUBTRACT = 10
-    MULTIPLY = 11
-    DIVIDE = 12
-    ASSIGN = 13
+    RETURN = 3
+    OPEN_PAR = 4
+    CLOSING_PAR = 5
+    NAME = 6
+    INT = 7
+    FLOAT = 8
+    STRING = 9
+    ADD = 10
+    SUBTRACT = 11
+    MULTIPLY = 12
+    DIVIDE = 13
+    ASSIGN = 14
+    GREATER_THAN = 15
+    GREATER_EQUAL_THAN = 16
+    LESS_THAN = 17
+    LESS_EQUAL_THEN = 18
 
 
     def is_operator(self):
