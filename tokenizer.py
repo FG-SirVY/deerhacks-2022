@@ -40,6 +40,7 @@ class TokenType(enum.Enum):
     NOT = 22
     AND = 23
     OR = 24
+    MOD = 25
 
 
     def is_operator(self):

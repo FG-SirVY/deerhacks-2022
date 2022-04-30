@@ -294,7 +294,7 @@ class Operators:
         Throws if:
             - <args> does not have exactly 2 objects of type bool
         """
-        if len(args) != 1:
+        if len(args) != 2:
             return Error("AND operator requires exactly 2 operands.")
         try:
             return bool(args[0]) and bool(args[1])
@@ -307,10 +307,24 @@ class Operators:
         Throws if:
             - <args> does not have exactly 2 objects of type bool
         """
-        if len(args) != 1:
+        if len(args) != 2:
             return Error("OR operator requires exactly 2 operands.")
         try:
             return bool(args[0]) or bool(args[1])
+        except TypeError as te:
+            return Error(str(te))
+
+    def _mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+        """
+        Return the mod of args[0] when divided by args[1].
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - the object is not of type int or float
+        """
+        if len(args) != 2:
+            return Error("MOD operator requires exactly 2 operand.")
+        try:
+            return args[0] % args[1]
         except TypeError as te:
             return Error(str(te))
 
@@ -334,7 +348,8 @@ OPERATORS = \
     TokenType.TO_BOOL: (False, True, Operators._bool),
     TokenType.NOT: (False, True, Operators._not),
     TokenType.AND: (True, True, Operators._and),
-    TokenType.OR: (True, True, Operators._or)
+    TokenType.OR: (True, True, Operators._or),
+    TokenType.MOD: (True, True, Operators._mod)
 }
 
 
