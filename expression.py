@@ -1,4 +1,5 @@
 from typing import Any, Optional, Union
+from tokenizer import TokenType
 import math
 
 
@@ -58,153 +59,181 @@ class Error:
                 self.traceback.append(f"Line {origin}")
 
 
-def op_add(args: list[Union[int, float]],
-        env: dict[str, Any]) -> Union[int, float, Error]:
-    """
-    Add two arguments in <args> and return their sum. <env> is ignored.
+class Operators:
+    def add(args: list[Union[int, float]],
+            env: dict[str, Any]) -> Union[int, float, Error]:
+        """
+        Add two arguments in <args> and return their sum. <env> is ignored.
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - objects in <args> may not be added
-    """
-    if len(args) != 2:
-        return Error("ADD operator requires exactly 2 operands.")
-    try:
-        return args[0] + args[1]
-    except TypeError as te:
-        return Error(str(te))
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be added
+        """
+        if len(args) != 2:
+            return Error("ADD operator requires exactly 2 operands.")
+        try:
+            return args[0] + args[1]
+        except TypeError as te:
+            return Error(str(te))
 
+    def sub(args: list[Union[int, float]],
+            env: dict[str, Any]) -> Union[int, float, Error]:
+        """
+        Subtract two arguments in <args> (args[0] - args[1]) and return their
+        difference. <env> is ignored.
 
-def op_sub(args: list[Union[int, float]],
-        env: dict[str, Any]) -> Union[int, float, Error]:
-    """
-    Subtract two arguments in <args> (args[0] - args[1]) and return their
-    difference. <env> is ignored.
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be subtracted
+        """
+        if len(args) != 2:
+            return Error("SUB operator requires exactly 2 operands.")
+        try:
+            return args[0] - args[1]
+        except TypeError as te:
+            return Error(str(te))
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - objects in <args> may not be subtracted
-    """
-    if len(args) != 2:
-        return Error("SUB operator requires exactly 2 operands.")
-    try:
-        return args[0] - args[1]
-    except TypeError as te:
-        return Error(str(te))
+    def mul(args: list[Union[int, float]],
+            env: dict[str, Any]) -> Union[int, float, Error]:
+        """
+        Multiply two arguments in <args> and return their product. <env> is ignored.
 
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be multiplied
+        """
+        if len(args) != 2:
+            return Error("MUL operator requires exactly 2 operands.")
+        try:
+            return args[0] * args[1]
+        except TypeError as te:
+            return Error(str(te))
 
-def op_mul(args: list[Union[int, float]],
-        env: dict[str, Any]) -> Union[int, float, Error]:
-    """
-    Multiply two arguments in <args> and return their product. <env> is ignored.
+    def div(args: list[Union[int, float]],
+            env: dict[str, Any]) -> Union[int, float, Error]:
+        """
+        Divide two arguments in <args> (args[0] / args[1]) and return their
+        quotient. <env> is ignored.
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - objects in <args> may not be multiplied
-    """
-    if len(args) != 2:
-        return Error("MUL operator requires exactly 2 operands.")
-    try:
-        return args[0] * args[1]
-    except TypeError as te:
-        return Error(str(te))
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be divided
+            - args[1] is zero
+        """
+        if len(args) != 2:
+            return Error("DIV operator requires exactly 2 operands.")
+        try:
+            return args[0] / args[1]
+        except TypeError as te:
+            return Error(str(te))
+        except ZeroDivisionError as zde:
+            return Error(str(zde))
 
+    def grt(args: list[Any], env: dict[str, Any]) -> bool:
+        """
+        Compare two arguments in <args> (args[0] > args[1]) and return True iff
+        args[0] > args[1].
 
-def op_div(args: list[Union[int, float]],
-        env: dict[str, Any]) -> Union[int, float, Error]:
-    """
-    Divide two arguments in <args> (args[0] / args[1]) and return their
-    quotient. <env> is ignored.
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be compared
+        """
+        if len(args) != 2:
+            return Error("GRT operator requires exactly 2 operands.")
+        try:
+            return args[0] > args[1]
+        except TypeError as te:
+            return Error(str(te))
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - objects in <args> may not be divided
-        - args[1] is zero
-    """
-    if len(args) != 2:
-        return Error("DIV operator requires exactly 2 operands.")
-    try:
-        return args[0] / args[1]
-    except TypeError as te:
-        return Error(str(te))
-    except ZeroDivisionError as zde:
-        return Error(str(zde))
+    def geq(args: list[Any], env: dict[str, Any]) -> bool:
+        """
+        Compare two arguments in <args> (args[0] >= args[1]) and return True iff
+        args[0] >= args[1].
 
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be compared
+        """
+        if len(args) != 2:
+            return Error("GEQ operator requires exactly 2 operands.")
+        try:
+            return args[0] >= args[1]
+        except TypeError as te:
+            return Error(str(te))
 
-def op_grt(args: list[Any], env: dict[str, Any]) -> bool:
-    """
-    Compare two arguments in <args> (args[0] > args[1]) and return True iff
-    args[0] > args[1].
+    def les(args: list[Any], env: dict[str, Any]) -> bool:
+        """
+        Compare two arguments in <args> (args[0] < args[1]) and return True iff
+        args[0] < args[1].
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - objects in <args> may not be compared
-    """
-    if len(args) != 2:
-        return Error("GRT operator requires exactly 2 operands.")
-    try:
-        return args[0] > args[1]
-    except TypeError as te:
-        return Error(str(te))
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be compared
+        """
+        if len(args) != 2:
+            return Error("LES operator requires exactly 2 operands.")
+        try:
+            return args[0] < args[1]
+        except TypeError as te:
+            return Error(str(te))
 
+    def leq(args: list[Any], env: dict[str, Any]) -> bool:
+        """
+        Compare two arguments in <args> (args[0] <= args[1]) and return True iff
+        args[0] <= args[1].
 
-def op_geq(args: list[Any], env: dict[str, Any]) -> bool:
-    """
-    Compare two arguments in <args> (args[0] >= args[1]) and return True iff
-    args[0] >= args[1].
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be compared
+        """
+        if len(args) != 2:
+            return Error("LEQ operator requires exactly 2 operands.")
+        try:
+            return args[0] <= args[1]
+        except TypeError as te:
+            return Error(str(te))
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - objects in <args> may not be compared
-    """
-    if len(args) != 2:
-        return Error("GEQ operator requires exactly 2 operands.")
-    try:
-        return args[0] >= args[1]
-    except TypeError as te:
-        return Error(str(te))
+    def ass(args: list[Any], env: dict[str, Any]) -> Optional[Error]:
+        """
+        Assign args[1] to args[0], using the assign method.
 
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - args[0] is not assignable (doesn't have callable attribute assign)
+        """
+        if len(args) != 2:
+            return Error("ASSIGN operator requires exactly 2 operands.")
+        if not hasattr(args[0], 'assign'):
+            return Error("ASSIGN operator requires assignable left operand.")
+        args[0].assign(args[1], env)
 
-def op_ass(args: list[Any], env: dict[str, Any]) -> Optional[Error]:
-    """
-    Assign args[1] to args[0], using the assign method.
+    def ret(args: list[Any], env: dict[str, Any]) -> Union['RetVal', Error]:
+        """
+        Return args[0] as a RetVal to signify the termination of a sequence with a
+        returned value.
 
-    Throws if:
-        - <args> does not have exactly 2 objects
-        - args[0] is not assignable (doesn't have callable attribute assign)
-    """
-    if len(args) != 2:
-        return Error("ASSIGN operator requires exactly 2 operands.")
-    if not hasattr(args[0], 'assign'):
-        return Error("ASSIGN operator requires assignable left operand.")
-    args[0].assign(args[1], env)
-
-
-def op_ret(args: list[Any], env: dict[str, Any]) -> Union['RetVal', Error]:
-    """
-    Return args[0] as a RetVal to signify the termination of a sequence with a
-    returned value.
-
-    Throws if:
-        - <args> does not have exactly 1 object
-    """
-    if len(args) != 1:
-        return Error("RETURN operator requires exactly 1 argument.")
-    return RetVal(args[0])
+        Throws if:
+            - <args> does not have exactly 1 object
+        """
+        if len(args) != 1:
+            return Error("RETURN operator requires exactly 1 argument.")
+        return RetVal(args[0])
 
 
 # dict[str, tuple[bool, bool, Callable]]
 # [id (one char), [has left operand, has right operand, operator function]]
 OPERATORS = \
 {
-    '+': (True, True, op_add),
-    '-': (True, True, op_sub),
-    '*': (True, True, op_mul),
-    '/': (True, True, op_div),
-    '>': (True, True, op_grt),
-    '>=': (True, True, op_geq),
-    '=': (True, True, op_ass),
-    'ret': (False, True, op_ret),
+    TokenType.ADD: (True, True, Operators.add),
+    TokenType.SUBTRACT: (True, True, Operators.sub),
+    TokenType.MULTIPLY: (True, True, Operators.mul),
+    TokenType.DIVIDE: (True, True, Operators.div),
+    TokenType.GREATER_THAN: (True, True, Operators.grt),
+    TokenType.GREATER_EQUAL: (True, True, Operators.geq),
+    TokenType.LESS_THAN: (True, True, Operators.les),
+    TokenType.LESS_EQUAL: (True, True, Operators.leq),
+    TokenType.ASSIGN: (True, True, Operators.ass),
+    TokenType.RETURN: (False, True, Operators.ret),
 }
 
 
@@ -302,10 +331,10 @@ class Operation(Expression):
     r_operand: Expression representing the right operand.
     """
     l_operand: Optional[Expression]
-    operator: str
+    operator: TokenType
     r_operand: Optional[Expression]
 
-    def __init__(self, l_operand: Optional[Expression], operator: str,
+    def __init__(self, l_operand: Optional[Expression], operator: TokenType,
                  r_operand: Optional[Expression], origin: int = -1):
         Expression.__init__(self, origin)
         self.l_operand = l_operand
