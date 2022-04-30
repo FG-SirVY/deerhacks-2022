@@ -301,6 +301,19 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
+    def _or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+        """
+        Return the "or" of args[0] and args[1].
+        Throws if:
+            - <args> does not have exactly 2 objects of type bool
+        """
+        if len(args) != 2:
+            return Error("OR operator requires exactly 2 operands.")
+        try:
+            return bool(args[0]) or bool(args[1])
+        except TypeError as te:
+            return Error(str(te))
+
     def _mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the mod of args[0] when divided by args[1].
@@ -456,11 +469,11 @@ class Operation(Expression):
             - a required operand expression fails to evaluate
             - the operator fails to evaluate
 
-        >>> op = Operation(Constant(2), '+', Constant(2))
+        >>> op = Operation(Constant(2), TokenType.ADD, Constant(2))
         >>> op.evaluate({})
         4
 
-        >>> op = Operation(None, '+', Constant(2))
+        >>> op = Operation(None, TokenType.ADD, Constant(2))
         >>> op.evaluate({})
         Traceback:
             Missing left operand.
@@ -499,11 +512,33 @@ class RetVal(Constant):
     pass
 
 
+class Block(Expression):
+    """
+    An executable sequence of expressions.
+    """
+    steps: list[Expression]
+
+    def __init__(self, steps: list[Expression], origin: int = -1):
+        Expression.__init__(self)
+        self.steps = steps
+    
+    def evaluate(self, env: dict[str, Any]) -> Any:
+        """
+        Throws if:
+            - any step fails to evaluate
+        """
+        for step in self.steps:
+            result = step.evaluate(env)
+            if isinstance(result, Error):
+                result.append("", self.origin)
+            return result
+
+
 class IfBlock(Expression):
     """
-    A block of (condition, expression) pairs.
+    A block of (condition, Block) pairs.
     """
-    steps: list[tuple[Expression, Expression]]
+    steps: list[tuple[Expression, Block]]
 
     def __init__(self, steps: list[tuple[Expression, Expression]],
                  origin: int = -1):
@@ -519,7 +554,7 @@ class IfBlock(Expression):
                 cond.append("", self.origin)
                 return cond
             if cond:
-                result = step[1].evaluate(env)
+                result = step[1].evaluate(env.copy())
                 if isinstance(result, Error):
                     result.append("", self.origin)
                 return result
@@ -531,30 +566,29 @@ class Function(Expression):
     may return a value.
     """
     params: list[str]
-    steps: list[Expression]
+    code: Block
 
-    def __init__(self, params: list[str], steps: list[Expression],
+    def __init__(self, params: list[str], code: Block,
                  origin: int = -1):
         Expression.__init__(self, origin)
         self.params = params
-        self.steps = steps
+        self.code = code
     
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
-        Each step is evaluated and its value is ignored, unless this value is
-        an Error or RetVal. If a RetVal is encountered, execution is halted and
-        the value is returned.
+        Function code is evaluated and its value is ignored, unless this value
+        is an Error or RetVal. If a RetVal is encountered, execution is halted
+        and the value is returned.
 
         Throws if:
-            - any step fails to evaluate
+            - function code fails to evaluate
         """
-        for step in self.steps:
-            result = step.evaluate(env)
-            if isinstance(result, Error):
-                result.append("", self.origin)
-                return result
-            elif isinstance(result, RetVal):
-                return result.evaluate(env)
+        result = self.code.evaluate(env.copy())
+        if isinstance(result, Error):
+            result.append("", self.origin)
+        elif isinstance(result, RetVal):
+            return result.evaluate(env)
+        return result
 
 
 class Invocation(Expression):
@@ -609,19 +643,30 @@ class Invocation(Expression):
         return result
 
 
-fmax = Function(['x', 'y'],
-[
-    IfBlock(
-    [
-        (Operation(Name('x'), '>', Name('y')),
-            Operation(None, 'ret', Name('x'))),
-        (Constant(True),
-            Operation(None, 'ret', Name('y')))
-    ]),
-])
-ivk = Invocation("max", [Constant(5), Constant(6)])
-print(ivk.evaluate({'max': fmax}))
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+
+    # def max(x, y):
+    #     if x > y:
+    #         return x
+    #     else:
+    #         return y
+    _max = Function(['x', 'y'],
+    Block([
+        IfBlock(
+        [
+            (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
+                Block(
+                [
+                    Operation(None, TokenType.RETURN, Name('x'))
+                ])),
+            (Constant(True),
+                Block(
+                [
+                    Operation(None, TokenType.RETURN, Name('y'))
+                ])),
+        ])
+    ]))
+    ivk = Invocation("max", [Constant(4), Constant(3)])
+    print(ivk.evaluate({ 'max': _max }))
