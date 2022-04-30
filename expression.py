@@ -253,6 +253,48 @@ def op_bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
     except TypeError as te:
         return Error(str(te))
 
+def op_not(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    """
+    Return the negation of args[0].
+
+    Throws if:
+        - <args> does not have exactly 1 object of type bool
+    """
+    if len(args) != 1:
+        return Error("NOT operator requires exactly 1 argument.")
+    try:
+        return not bool(args[0])
+    except TypeError as te:
+        return Error(str(te))
+
+def op_and(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    """
+    Return the "and" of args[0] and args[1].
+
+    Throws if:
+        - <args> does not have exactly 2 object of type bool
+    """
+    if len(args) != 1:
+        return Error("AND operator requires exactly 1 argument.")
+    try:
+        return bool(args[0]) and bool(args[1])
+    except TypeError as te:
+        return Error(str(te))
+
+def op_or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    """
+    Return the "or" of args[0] and args[1].
+
+    Throws if:
+        - <args> does not have exactly 2 object of type bool
+    """
+    if len(args) != 1:
+        return Error("OR operator requires exactly 1 argument.")
+    try:
+        return bool(args[0]) or bool(args[1])
+    except TypeError as te:
+        return Error(str(te))
+
 # dict[str, tuple[bool, bool, Callable]]
 # [id (one char), [has left operand, has right operand, operator function]]
 OPERATORS = \
@@ -261,10 +303,13 @@ OPERATORS = \
     TokenType.SUBTRACT: (True, True, op_sub),
     TokenType.MULTIPLY: (True, True, op_mul),
     TokenType.DIVIDE: (True, True, op_div),
-    TokenType.ASSIGN: (True, True, op_ass)
+    TokenType.ASSIGN: (True, True, op_ass),
     TokenType.TO_INT: (True, True, op_int),
     TokenType.TO_FLOAT: (True, True, op_float),
     TokenType.TO_BOOL: (True, True, op_bool),
+    TokenType.NOT: (True, True, op_not),
+    TokenType.AND: (True, True, op_and),
+    TokenType.OR: (True, True, op_or)
 }
 
 
