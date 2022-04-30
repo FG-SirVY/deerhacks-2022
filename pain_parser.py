@@ -1,4 +1,4 @@
-from expression import Expression, Invocation, Name, Operation, Constant
+from expression import Expression, Invocation, Name, Operation, Constant, Environment
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -127,12 +127,12 @@ class Parser:
         33
         >>> Parser("5 A 6 D 3").parse_line().evaluate({})
         23
-        >>> env = {}
+        >>> env = Environment({})
         >>> parsed = Parser("test E 4").parse_line()
         >>> parsed
         Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<4>>
         >>> parsed.evaluate(env)
-        >>> env["test"]
+        >>> env.get_value("test")
         4
         """
         left = self.tokenizer.peek_next_token()
