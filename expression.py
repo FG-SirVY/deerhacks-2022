@@ -139,6 +139,11 @@ class Constant(Expression):
     def __init__(self, value: Any, origin: int = -1):
         Expression.__init__(self, origin)
         self.value = value
+
+    
+    def __repr__(self):
+        return f"Constant<c: {self.value}>"
+
     
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
@@ -204,35 +209,40 @@ class Operation(Expression):
     r_operand: Expression representing the right operand.
     """
     l_operand: Optional[Expression]
-    operator: Token
+    operator: TokenType
     r_operand: Optional[Expression]
 
-    def __init__(self, l_operand: Optional[Expression], operator: Token,
+
+    def __init__(self, l_operand: Optional[Expression], operator: TokenType,
                  r_operand: Optional[Expression], origin: int = -1):
         Expression.__init__(self, origin)
         self.l_operand = l_operand
         self.operator = operator
         self.r_operand = r_operand
-    
+
+
+    def __repr__(self):
+        return f"Operation<l: {self.l_operand}, op: {self.operator}, r: {self.r_operand}>"
+
+
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
         Search for self.operator in OPERATORS, evaluate l_operand and
         r_operand as needed, and return the value resulting from the operation.
 
-        >>> op = Operation(Constant(2), '+', Constant(2))
+        >>> op = Operation(Constant(2), TokenType.ADD, Constant(2))
         >>> op.evaluate({})
         4
-
-        >>> op = Operation(None, '+', Constant(2))
+        >>> op = Operation(None, TokenType.ADD, Constant(2))
         >>> op.evaluate({})
         Missing left operand.
         """
-        if self.operator.token_type not in OPERATORS:
+        if self.operator not in OPERATORS:
             error = Error([])
             error.append(f"Operator \'{self.operator}\' is invalid.",
                          self.origin)
             return error
-        operator = OPERATORS[self.operator.token_type]
+        operator = OPERATORS[self.operator]
         args = []
 
         if operator[0]: # LEFT OPERAND
