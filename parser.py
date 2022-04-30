@@ -29,6 +29,55 @@ class Parser:
         raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
 
 
+    def parse_unitary_operator(self) -> Expression:
+        operator = self.tokenizer.get_next_token().token_type
+        return Operation(None, operator, self.parse_line())
+
+
+    def parse_parentheses(self) -> Expression:
+        self.tokenizer.get_next_token()
+        l_operand = self.parse_term(self.parse_line())
+        self.tokenizer.get_next_token()
+        return self.parse_term(l_operand)
+
+
+    def parse_mul_div(self, l_operand) -> Expression:
+        operator = self.tokenizer.get_next_token().token_type
+        right = self.tokenizer.peek_next_token()
+
+        if right.is_token_type(TokenType.OPEN_PAR):
+            return self.parse_term(Operation(l_operand, operator,
+                self.parse_parentheses()))
+        else:
+            r_operand = self.get_as_expression(self.tokenizer.get_next_token())
+            return self.parse_term(Operation(l_operand, operator, r_operand))       
+
+
+    def parse_add_sub(self, l_operand) -> Expression:
+        operator = self.tokenizer.get_next_token().token_type
+        return Operation(l_operand, operator, self.parse_line())
+
+    
+    def parse_assignment(self, l_operand) -> Expression:
+        operator = self.tokenizer.get_next_token().token_type
+        return Operation(l_operand, operator, self.parse_line())
+
+    
+    def parse_term(self, l_operand) -> Expression:
+        operator = self.tokenizer.peek_next_token()
+
+        if operator.is_token_type(TokenType.MULTIPLY) \
+            or operator.is_token_type(TokenType.DIVIDE):
+            return self.parse_mul_div(l_operand)
+        elif operator.is_token_type(TokenType.ADD) \
+            or operator.is_token_type(TokenType.SUBTRACT):
+            return self.parse_add_sub(l_operand)
+        elif operator.is_token_type(TokenType.ASSIGN):
+            return self.parse_assignment(l_operand)
+        else:
+            return l_operand
+
+
     def parse_line(self) -> Expression:
         """
         # TODO: Error handling
@@ -46,27 +95,25 @@ class Parser:
         Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Operation<l: Constant<c: 6>, op: TokenType.ADD, r: Constant<c: 3>>>
         >>> tree.evaluate({})
         14
+        >>> Parser("3 C )5 B 6(").parse_line().evaluate({})
+        33
+        >>> Parser("5 C 6").parse_line().evaluate({})
+        30
+        >>> Parser(")5 A 6( D 3").parse_line().evaluate({})
+        33
+        >>> Parser("5 A 6 D 3").parse_line().evaluate({})
+        23
         """
-        left = self.tokenizer.get_next_token()
+        left = self.tokenizer.peek_next_token()
 
-        if left.token_type == TokenType.OPEN_PAR:
-            return self.parse_line()
-        elif left.is_operator():
-            operator = left.token_type
-            operand = self.parse_line()
-            return Operation(None, operator, operand)
+        if left.is_operator():
+            return self.parse_unitary_operator()
+        elif left.is_token_type(TokenType.OPEN_PAR):
+            return self.parse_parentheses()
         else:
-            l_operand = self.get_as_expression(left)
-            middle = self.tokenizer.get_next_token()
-
-            if middle.is_token_type(TokenType.CLOSING_PAR) or middle.is_token_type(TokenType.EOF) \
-                or middle.is_token_type(TokenType.EOL):
-                return l_operand
-            elif middle.is_token_type(TokenType.ADD):
-                operator = middle.token_type
-                r_operand = self.parse_line()
-                return Operation(l_operand, operator, r_operand)
-
+            l_operand = self.get_as_expression(self.tokenizer.get_next_token())
+            return self.parse_term(l_operand)
+            
 
 if __name__ == "__main__":
     import doctest
