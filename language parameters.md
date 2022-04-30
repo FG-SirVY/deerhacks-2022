@@ -97,25 +97,25 @@ False
 11. %
 12. len()
 13. access item
-14. assign item
-15. dict
-16. 	* get keys
-17. 	* get values
-18. for
-19. if
-20. in
-21. while
-22. def
-23. in
-24. and
-25. or
-26. not
-27. ==
-28. >
-29. <
-30. <=
-31. >=
-32. !=
+    dict
+14. 	* get keys
+15. 	* get values
+16. for
+17. if
+18. in
+19. while
+20. def
+21. in
+22. and
+23. or
+24. not
+25. ==
+26. >
+27. <
+28. <=
+29. >=
+30. !=
+31. else
 
 #Example programs
 
@@ -166,4 +166,28 @@ Hello World! joe
 Hello World! bill
 Hello World! mike
 Hello World! tom
+```
+
+Exhibit E
+```
+print{1 - 1 * 2 / 3}|
+```
+```
+7
+```
+
+Exhibit F
+```
+a = 1|
+b + 2|
+
+while a != b[
+	str{"a is less than b"}]|
+print or a > b[
+	- "a is greater than b"]|
+- > a float b[
+	len{"a is equal to b"}]|
+```
+```
+a is less than b
 ```
