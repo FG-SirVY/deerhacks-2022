@@ -61,13 +61,14 @@ class Error:
 def op_add(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
-    Throws unless <args> is a list of 2 objects.
-    Throws unless both objects in <args> may be added.
-    Adds two arguments in <args> and return their sum.
-    <env> is ignored.
+    Add two arguments in <args> and return their sum. <env> is ignored.
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - objects in <args> may not be added
     """
     if len(args) != 2:
-        return Error("ADD operator requires exactly 2 arguments.")
+        return Error("ADD operator requires exactly 2 operands.")
     try:
         return args[0] + args[1]
     except TypeError as te:
@@ -77,13 +78,15 @@ def op_add(args: list[Union[int, float]],
 def op_sub(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
-    Throws unless <args> is a list of 2 objects.
-    Throws unless both objects in <args> may be subtracted.
-    Subtracts two arguments in <args> and return their difference.
-    <env> is ignored.
+    Subtract two arguments in <args> (args[0] - args[1]) and return their
+    difference. <env> is ignored.
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - objects in <args> may not be subtracted
     """
     if len(args) != 2:
-        return Error("SUB operator requires exactly 2 arguments.")
+        return Error("SUB operator requires exactly 2 operands.")
     try:
         return args[0] - args[1]
     except TypeError as te:
@@ -93,13 +96,14 @@ def op_sub(args: list[Union[int, float]],
 def op_mul(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
-    Throws unless <args> is a list of 2 objects.
-    Throws unless both objects in <args> may be multiplied.
-    Multiplies two arguments in <args> and return their product.
-    <env> is ignored.
+    Multiply two arguments in <args> and return their product. <env> is ignored.
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - objects in <args> may not be multiplied
     """
     if len(args) != 2:
-        return Error("MUL operator requires exactly 2 arguments.")
+        return Error("MUL operator requires exactly 2 operands.")
     try:
         return args[0] * args[1]
     except TypeError as te:
@@ -109,14 +113,16 @@ def op_mul(args: list[Union[int, float]],
 def op_div(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
-    Throws unless <args> is a list of 2 objects.
-    Throws unless both objects in <args> may be divided.
-    Throws if args[1] is 0.
-    Divides two arguments in <args> and return their quotient.
-    <env> is ignored.
+    Divide two arguments in <args> (args[0] / args[1]) and return their
+    quotient. <env> is ignored.
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - objects in <args> may not be divided
+        - args[1] is zero
     """
     if len(args) != 2:
-        return Error("DIV operator requires exactly 2 arguments.")
+        return Error("DIV operator requires exactly 2 operands.")
     try:
         return args[0] / args[1]
     except TypeError as te:
@@ -125,17 +131,66 @@ def op_div(args: list[Union[int, float]],
         return Error(str(zde))
 
 
-def op_ass(args: list[Any], env: dict[str, Any]) -> None:
+def op_grt(args: list[Any], env: dict[str, Any]) -> bool:
     """
-    Throws unless args[0] is assignable (hasattr(args[0]) == True) and args[1]
-    exists.
-    Assign a given value (args[1]) to a given reference (args[0]) in <env>.
+    Compare two arguments in <args> (args[0] > args[1]) and return True iff
+    args[0] > args[1].
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - objects in <args> may not be compared
     """
     if len(args) != 2:
-        return Error("ASSIGN operator requires exactly 2 arguments.")
+        return Error("GRT operator requires exactly 2 operands.")
+    try:
+        return args[0] > args[1]
+    except TypeError as te:
+        return Error(str(te))
+
+
+def op_geq(args: list[Any], env: dict[str, Any]) -> bool:
+    """
+    Compare two arguments in <args> (args[0] >= args[1]) and return True iff
+    args[0] >= args[1].
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - objects in <args> may not be compared
+    """
+    if len(args) != 2:
+        return Error("GEQ operator requires exactly 2 operands.")
+    try:
+        return args[0] >= args[1]
+    except TypeError as te:
+        return Error(str(te))
+
+
+def op_ass(args: list[Any], env: dict[str, Any]) -> Optional[Error]:
+    """
+    Assign args[1] to args[0], using the assign method.
+
+    Throws if:
+        - <args> does not have exactly 2 objects
+        - args[0] is not assignable (doesn't have callable attribute assign)
+    """
+    if len(args) != 2:
+        return Error("ASSIGN operator requires exactly 2 operands.")
     if not hasattr(args[0], 'assign'):
         return Error("ASSIGN operator requires assignable left operand.")
     args[0].assign(args[1], env)
+
+
+def op_ret(args: list[Any], env: dict[str, Any]) -> Union['RetVal', Error]:
+    """
+    Return args[0] as a RetVal to signify the termination of a sequence with a
+    returned value.
+
+    Throws if:
+        - <args> does not have exactly 1 object
+    """
+    if len(args) != 1:
+        return Error("RETURN operator requires exactly 1 argument.")
+    return RetVal(args[0])
 
 
 # dict[str, tuple[bool, bool, Callable]]
@@ -146,7 +201,10 @@ OPERATORS = \
     '-': (True, True, op_sub),
     '*': (True, True, op_mul),
     '/': (True, True, op_div),
+    '>': (True, True, op_grt),
+    '>=': (True, True, op_geq),
     '=': (True, True, op_ass),
+    'ret': (False, True, op_ret),
 }
 
 
@@ -262,8 +320,8 @@ class Operation(Expression):
 
         Throws if:
             - self.operator is undefined
-            - a required operand is None
-            - a required operand fails to evaluate
+            - a required operand expression is None
+            - a required operand expression fails to evaluate
             - the operator fails to evaluate
 
         >>> op = Operation(Constant(2), '+', Constant(2))
@@ -305,7 +363,69 @@ class Operation(Expression):
         return result
 
 
+class RetVal(Constant):
+    pass
+
+
+class IfBlock(Expression):
+    """
+    A block of (condition, expression) pairs.
+    """
+    steps: list[tuple[Expression, Expression]]
+
+    def __init__(self, steps: list[tuple[Expression, Expression]],
+                 origin: int = -1):
+        Expression.__init__(self, origin)
+        self.steps = steps
+    
+    def evaluate(self, env: dict[str, Any]):
+        """
+        """
+        for step in self.steps:
+            cond = step[0].evaluate(env)
+            if isinstance(cond, Error):
+                cond.append("", self.origin)
+                return cond
+            if cond:
+                result = step[1].evaluate(env)
+                if isinstance(result, Error):
+                    result.append("", self.origin)
+                return result
+
+
 class Function(Expression):
+    """
+    An executable sequence of expressions that may take named parameters and
+    may return a value.
+    """
+    params: list[str]
+    steps: list[Expression]
+
+    def __init__(self, params: list[str], steps: list[Expression],
+                 origin: int = -1):
+        Expression.__init__(self, origin)
+        self.params = params
+        self.steps = steps
+    
+    def evaluate(self, env: dict[str, Any]) -> Any:
+        """
+        Each step is evaluated and its value is ignored, unless this value is
+        an Error or RetVal. If a RetVal is encountered, execution is halted and
+        the value is returned.
+
+        Throws if:
+            - any step fails to evaluate
+        """
+        for step in self.steps:
+            result = step.evaluate(env)
+            if isinstance(result, Error):
+                result.append("", self.origin)
+                return result
+            elif isinstance(result, RetVal):
+                return result.evaluate(env)
+
+
+class Invocation(Expression):
     """
             functio
     """
@@ -320,24 +440,22 @@ class Function(Expression):
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
         Evaluate all expressions in self.args, and pass results to the function
-        referred to by self.func. Return the result of the function.
+        in <env> referred to by self.func. Return the result of the function.
 
         Throws if:
             - self.func is undefined
             - self.func is not a function
             - any of self.args fail to evaluate
-
-        >>> import math
-        >>> env = { 'sin': lambda args: math.sin(args[0]) }
-        >>> f = Function("sin", [Operation(Constant(2), '+', Constant(3))])
-        >>> f.evaluate(env)
-        -0.9589242746631385
+            - the number of arguments does not match the number of parameters
+            required by the function
         """
         if self.func not in env:
             return Error(f"Function \'{self.func}\' is undefined.", self.origin)
         func = env[self.func]
-        if not callable(func):
-            return Error(f"Symbol \'{self.func}\' is not a function.", self.origin)
+        if not isinstance(func, Function):
+            return Error(f"Symbol \'{self.func}\' is not a function.",
+                         self.origin)
+        
         args = []
         for arg in self.args:
             arg = arg.evaluate(env)
@@ -345,8 +463,32 @@ class Function(Expression):
                 arg.append("", self.origin)
                 return arg
             args.append(arg)
-        return func(tuple(args))
+        if len(args) != len(func.params):
+            return Error(f"Function \'{self.func}\' requires exactly \
+                           {len(func.params)} parameters.", self.origin)
+        
+        sub_env = env.copy()
+        for (i, arg) in enumerate(args):
+            sub_env[func.params[i]] = arg
+        
+        result = func.evaluate(sub_env)
+        if isinstance(result, Error):
+            result.append("", self.origin)
+        return result
 
+
+fmax = Function(['x', 'y'],
+[
+    IfBlock(
+    [
+        (Operation(Name('x'), '>', Name('y')),
+            Operation(None, 'ret', Name('x'))),
+        (Constant(True),
+            Operation(None, 'ret', Name('y')))
+    ]),
+])
+ivk = Invocation("max", [Constant(5), Constant(6)])
+print(ivk.evaluate({'max': fmax}))
 
 if __name__ == "__main__":
     import doctest
