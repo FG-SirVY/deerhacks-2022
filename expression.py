@@ -581,6 +581,35 @@ class IfBlock(Expression):
                 return result
 
 
+class WhileLoop(Expression):
+    """
+    """
+    cond: Expression
+    code: Block
+
+    def __init__(self, cond: Expression, code: Block, origin: int = -1):
+        Expression.__init__(self, origin)
+        self.cond = cond
+        self.code = code
+    
+    def evaluate(self, env: Environment):
+        """
+        """
+        while True:
+            cond = self.cond.evaluate(env)
+            if isinstance(cond, Error):
+                cond.append("", self.origin)
+                return cond
+            if not cond:
+                break
+            result = self.code.evaluate(Environment({}, env))
+            if isinstance(result, Error):
+                result.append("", self.origin)
+                return result
+            elif isinstance(result, RetVal):
+                return result
+
+
 class Function(Expression):
     """
     An executable sequence of expressions that may take named parameters and
@@ -633,7 +662,10 @@ class Builtin(Expression):
                 arg.append("", self.origin)
                 return arg
             args.append(arg)
-        result = self.func(*args)
+        try:
+            result = self.func(*args)
+        except Exception as e:
+            return Error(str(e), self.origin)
         if isinstance(result, Error):
             result.append("", self.origin)
         return result   
@@ -691,33 +723,34 @@ class Invocation(Expression):
             result.append("", self.origin)
         return result
 
-# def max(x, y):
-#     if x > y:
-#         return x
-#     else:
-#         return y
-_max = Function(['x', 'y'],
-Block([
-    Operation(Constant(Name('z')), TokenType.ASSIGN, Constant(0)),
-    IfBlock(
+# def fib(n: int) -> int:
+#     x, y = 0, 1
+#     while n > 0:
+#         z = x + y
+#         x = y
+#         y = z
+#         n -= 1
+#     return x
+fn_fib = Function(['n'], Block(
+[
+    Operation(Constant(Name('x')), TokenType.ASSIGN, Constant(0), 2),
+    Operation(Constant(Name('y')), TokenType.ASSIGN, Constant(1), 2),
+    WhileLoop(Operation(Name('n'), TokenType.GREATER_THAN, Constant(0)), Block(
     [
-        (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
-            Block(
-            [
-                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x')),
-                Builtin(print, [Name('z')])
-            ])),
-        (Constant(True),
-            Block(
-            [
-                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y')),
-                Builtin(print, [Name('z')])
-            ])),
-    ]),
-    Operation(None, TokenType.RETURN, Name('z')),
-]))
-ivk = Invocation("max", [Constant(1), Constant(8)])
-print(ivk.evaluate(Environment({ 'max': _max })))
+        Operation(Constant(Name('z')), TokenType.ASSIGN, 
+                  Operation(Name('x'), TokenType.ADD, Name('y')), 4),
+
+        Operation(Constant(Name('x')), TokenType.ASSIGN, Name('y'), 5),
+        Operation(Constant(Name('y')), TokenType.ASSIGN, Name('z'), 6),
+        
+        Operation(Constant(Name('n')), TokenType.ASSIGN, 
+                  Operation(Name('n'), TokenType.SUBTRACT, Constant(1)), 7),
+    ]), 3),
+    Operation(None, TokenType.RETURN, Name('x'))
+]), 1)
+
+fib_ivk = Invocation("fib", [Constant(10)])
+print(fib_ivk.evaluate(Environment({'fib': fn_fib})))
 
 if __name__ == "__main__":
     import doctest
