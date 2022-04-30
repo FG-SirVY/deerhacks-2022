@@ -29,6 +29,9 @@ class TokenType(enum.Enum):
     MULTIPLY = 11
     DIVIDE = 12
     ASSIGN = 13
+    TO_INT = 14
+    TO_FLOAT = 15
+    TO_BOOL = 16
 
 
     def is_operator(self):
