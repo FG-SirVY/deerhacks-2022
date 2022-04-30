@@ -1,4 +1,5 @@
 from typing import Any, Optional, Union
+import math
 
 
 class Error:
@@ -21,25 +22,26 @@ class Error:
         with the same number of spaces as the level of the error in the
         expression tree.
 
-        >>> e = Error("ADD operator requires exactly 2 arguments.")
+        >>> e = Error("Ammo Gus")
         >>> e.append("", 0)
         >>> e.append("", 1)
         >>> e.append("")
         >>> e.append("", 3)
         >>> e
-        Line 3:
-         ---
-          Line 1:
-           Line 0:
-            ADD operator requires exactly 2 arguments.
+        Traceback:
+            Line 3
+             ---
+              Line 1
+               Line 0
+                Ammo Gus
         """
-        out = []
+        out = ["Traceback:"]
         for i in range(1, len(self.traceback) + 1):
             msg = self.traceback[-i]
             if len(msg) == 0:
-                out.append(f"{' ' * (i - 1)}---")
+                out.append(f"{' ' * (i + 3)}---")
             else:
-                out.append(f"{' ' * (i - 1)}{msg}")
+                out.append(f"{' ' * (i + 3)}{msg}")
         return '\n'.join(out)
 
     def append(self, message: str, origin: int = -1):
@@ -53,10 +55,10 @@ class Error:
             if len(message) != 0:
                 self.traceback.append(f"Line {origin}: {message}")
             else:
-                self.traceback.append(f"Line {origin}:")
+                self.traceback.append(f"Line {origin}")
 
 
-def add(args: list[Union[int, float]],
+def op_add(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
     Throws unless <args> is a list of 2 objects.
@@ -72,7 +74,7 @@ def add(args: list[Union[int, float]],
         return Error(str(te))
 
 
-def sub(args: list[Union[int, float]],
+def op_sub(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
     Throws unless <args> is a list of 2 objects.
@@ -88,7 +90,7 @@ def sub(args: list[Union[int, float]],
         return Error(str(te))
 
 
-def mul(args: list[Union[int, float]],
+def op_mul(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
     Throws unless <args> is a list of 2 objects.
@@ -104,7 +106,7 @@ def mul(args: list[Union[int, float]],
         return Error(str(te))
 
 
-def div(args: list[Union[int, float]],
+def op_div(args: list[Union[int, float]],
         env: dict[str, Any]) -> Union[int, float, Error]:
     """
     Throws unless <args> is a list of 2 objects.
@@ -118,12 +120,12 @@ def div(args: list[Union[int, float]],
     try:
         return args[0] / args[1]
     except TypeError as te:
-        return Error([str(te)])
+        return Error(str(te))
     except ZeroDivisionError as zde:
         return Error(str(zde))
 
 
-def assign(args: list[Any], env: dict[str, Any]) -> None:
+def op_ass(args: list[Any], env: dict[str, Any]) -> None:
     """
     Throws unless args[0] is assignable (hasattr(args[0]) == True) and args[1]
     exists.
@@ -132,7 +134,7 @@ def assign(args: list[Any], env: dict[str, Any]) -> None:
     if len(args) != 2:
         return Error("ASSIGN operator requires exactly 2 arguments.")
     if not hasattr(args[0], 'assign'):
-        return Error("ASSIGN operator requires name as left operand.")
+        return Error("ASSIGN operator requires assignable left operand.")
     args[0].assign(args[1], env)
 
 
@@ -140,11 +142,11 @@ def assign(args: list[Any], env: dict[str, Any]) -> None:
 # [id (one char), [has left operand, has right operand, operator function]]
 OPERATORS = \
 {
-    '+': (True, True, add),
-    '-': (True, True, sub),
-    '*': (True, True, mul),
-    '/': (True, True, div),
-    '=': (True, True, assign)
+    '+': (True, True, op_add),
+    '-': (True, True, op_sub),
+    '*': (True, True, op_mul),
+    '/': (True, True, op_div),
+    '=': (True, True, op_ass),
 }
 
 
@@ -181,6 +183,8 @@ class Constant(Expression):
         Return the constant value held within this expression.
         <env> is ignored.
 
+        No throw guarantee.
+
         >>> c = Constant('bruh')
         >>> c.evaluate({})
         'bruh'
@@ -211,14 +215,16 @@ class Name(Expression):
     
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
-        Search <env> for a value associated with this name attribute.
-        If not found, return an error indicating as such.
-        If found, return the associated value.
+        Return the value in <env> referred to by self.name.
+
+        Throws if:
+            - self.name is undefined.
 
         >>> env = {}
         >>> n = Name("x")
         >>> n.evaluate(env)
-        Name 'x' not defined.
+        Traceback:
+            Name 'x' not defined.
         >>> n.assign(5, env)
         >>> n.evaluate(env)
         5
@@ -250,8 +256,15 @@ class Operation(Expression):
     
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
-        Search for self.operator in OPERATORS, evaluate l_operand and
-        r_operand as needed, and return the value resulting from the operation.
+        Evaluate required operand sides (defined by operator), and pass the
+        results to the operator referred to by self.operator. Return the result
+        of the operator on the operands.
+
+        Throws if:
+            - self.operator is undefined
+            - a required operand is None
+            - a required operand fails to evaluate
+            - the operator fails to evaluate
 
         >>> op = Operation(Constant(2), '+', Constant(2))
         >>> op.evaluate({})
@@ -259,7 +272,8 @@ class Operation(Expression):
 
         >>> op = Operation(None, '+', Constant(2))
         >>> op.evaluate({})
-        Missing left operand.
+        Traceback:
+            Missing left operand.
         """
         if self.operator not in OPERATORS:
             return Error(f"Operator \'{self.operator}\' is invalid.",
@@ -285,13 +299,54 @@ class Operation(Expression):
                 return value
             args.append(value)
         
-        return operator[2](args, env)
+        result = operator[2](args, env)
+        if isinstance(result, Error):
+            result.append("", self.origin)
+        return result
 
 
-# epic_expr = Operation(Operation(Constant(3, 0), 'A', Constant(5, 0), 0), 'A', Constant(3, 0), 0)
-# # equivalent:
-# # 3 + 5 + 3
-# print(epic_expr.evaluate())
+class Function(Expression):
+    """
+            functio
+    """
+    func: str
+    args: list[Expression]
+
+    def __init__(self, func: str, args: list[Expression], origin: int = -1):
+        Expression.__init__(self, origin)
+        self.args = args
+        self.func = func
+    
+    def evaluate(self, env: dict[str, Any]) -> Any:
+        """
+        Evaluate all expressions in self.args, and pass results to the function
+        referred to by self.func. Return the result of the function.
+
+        Throws if:
+            - self.func is undefined
+            - self.func is not a function
+            - any of self.args fail to evaluate
+
+        >>> import math
+        >>> env = { 'sin': lambda args: math.sin(args[0]) }
+        >>> f = Function("sin", [Operation(Constant(2), '+', Constant(3))])
+        >>> f.evaluate(env)
+        -0.9589242746631385
+        """
+        if self.func not in env:
+            return Error(f"Function \'{self.func}\' is undefined.", self.origin)
+        func = env[self.func]
+        if not callable(func):
+            return Error(f"Symbol \'{self.func}\' is not a function.", self.origin)
+        args = []
+        for arg in self.args:
+            arg = arg.evaluate(env)
+            if isinstance(arg, Error):
+                arg.append("", self.origin)
+                return arg
+            args.append(arg)
+        return func(tuple(args))
+
 
 if __name__ == "__main__":
     import doctest
