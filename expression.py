@@ -627,30 +627,31 @@ class Invocation(Expression):
             result.append("", self.origin)
         return result
 
-# def max(x, y):
-#     if x > y:
-#         return x
-#     else:
-#         return y
-_max = Function(['x', 'y'],
-Block([
-    IfBlock(
-    [
-        (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
-            Block(
-            [
-                Operation(None, TokenType.RETURN, Name('x'))
-            ])),
-        (Constant(True),
-            Block(
-            [
-                Operation(None, TokenType.RETURN, Name('y'))
-            ])),
-    ])
-]))
-ivk = Invocation("max", [Constant(4), Constant(3)])
-print(ivk.evaluate({ 'max': _max }))
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+
+    # def max(x, y):
+    #     if x > y:
+    #         return x
+    #     else:
+    #         return y
+    _max = Function(['x', 'y'],
+    Block([
+        IfBlock(
+        [
+            (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
+                Block(
+                [
+                    Operation(None, TokenType.RETURN, Name('x'))
+                ])),
+            (Constant(True),
+                Block(
+                [
+                    Operation(None, TokenType.RETURN, Name('y'))
+                ])),
+        ])
+    ]))
+    ivk = Invocation("max", [Constant(4), Constant(3)])
+    print(ivk.evaluate({ 'max': _max }))
