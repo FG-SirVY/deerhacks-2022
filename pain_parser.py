@@ -65,20 +65,18 @@ class Parser:
         return Operation(Constant(l_operand), operator, self.parse_line())
 
     
-    def parse_invocation(self, name: Token) -> Expression:
-        assert name.token_type == TokenType.NAME
-
-        self.tokenizer.get_next_token()
+    def parse_invocation(self, name: Name) -> Expression:
+        assert self.tokenizer.get_next_token().token_type == TokenType.OPEN_PAR
 
         arguments = []
         next_operator = TokenType.COMMA
         while next_operator == TokenType.COMMA:
             arguments.append(self.parse_line())
-            next_operator = self.tokenizer.get_next_token()
+            next_operator = self.tokenizer.get_next_token().token_type
 
         assert next_operator == TokenType.CLOSING_PAR
 
-        return Invocation(name.payload, arguments)
+        return Invocation(name.name, arguments)
 
     
     def parse_term(self, l_operand) -> Expression:
