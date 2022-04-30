@@ -1,19 +1,19 @@
-from expression import Expression
+from expression import Expression, Environment
 from pain_parser import Parser
 import sys
 from typing import Any
 
 
-def run_file(fname: str, env: dict[str, Any]) -> None:
+def run_file(fname: str, env: Environment) -> None:
     """
-    >>> env = {}
+    >>> env = Environment({})
     >>> run_file("test-scripts/simple_arithmetic.pain", env)
-    >>> env
-    {'test': 11}
-    >>> env = {}
+    >>> env.get_value("test")
+    11
+    >>> env = Environment({})
     >>> run_file("test-scripts/more_complex_arithmetic.pain", env)
-    >>> env
-    {'t': 432}
+    >>> env.get_value("t")
+    432
     """
     expressions: list[Expression] = []
     #filename = sys.argv[1]
