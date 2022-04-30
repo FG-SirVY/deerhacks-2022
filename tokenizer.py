@@ -84,6 +84,7 @@ class Tokenizer:
     script: str
     index: int
     shift: int
+    next_token: Token
 
 
     def __init__(self, script: str) -> None:
@@ -93,6 +94,7 @@ class Tokenizer:
         self.script = script
         self.index = -1
         self.shift = 0
+        self.next_token = None
 
 
     def _get_numerical_token(self) -> Token:
@@ -160,6 +162,16 @@ class Tokenizer:
         return Token(TokenType.NAME, payload=self.script[start:self.index])
 
 
+    def peek_next_token(self) -> Token:
+        """
+        Returns the next token without advancing to that position.
+        """
+        if self.next_token is None:
+            self.next_token = self.get_next_token()
+        
+        return self.next_token  
+
+
     def get_next_token(self) -> Token:
         """
         Parses the next token from the script.
@@ -174,6 +186,11 @@ class Tokenizer:
         >>> t.get_next_token()
         Token<Type: EOF, Payload: None>
         """
+        if self.next_token is not None:
+            ret = self.next_token
+            self.next_token = None
+            return ret
+
         self.index += 1
         while self.index < len(self.script) and self.script[self.index].isspace():
             self.index += 1

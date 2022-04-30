@@ -1,4 +1,5 @@
 from typing import Any, Optional, Union
+from tokenizer import Token, TokenType
 
 
 class Error:
@@ -103,11 +104,11 @@ def assign(args: list[Any], env: dict[str, Any]) -> None:
 # [id (one char), [has left operand, has right operand, operator function]]
 OPERATORS = \
 {
-    '+': (True, True, add),
-    '-': (True, True, sub),
-    '*': (True, True, mul),
-    '/': (True, True, div),
-    '=': (True, True, assign)
+    TokenType.ADD: (True, True, add),
+    TokenType.SUBTRACT: (True, True, sub),
+    TokenType.MULTIPLY: (True, True, mul),
+    TokenType.DIVIDE: (True, True, div),
+    TokenType.ASSIGN: (True, True, assign)
 }
 
 
@@ -203,10 +204,10 @@ class Operation(Expression):
     r_operand: Expression representing the right operand.
     """
     l_operand: Optional[Expression]
-    operator: str
+    operator: Token
     r_operand: Optional[Expression]
 
-    def __init__(self, l_operand: Optional[Expression], operator: str,
+    def __init__(self, l_operand: Optional[Expression], operator: Token,
                  r_operand: Optional[Expression], origin: int = -1):
         Expression.__init__(self, origin)
         self.l_operand = l_operand
@@ -226,12 +227,12 @@ class Operation(Expression):
         >>> op.evaluate({})
         Missing left operand.
         """
-        if self.operator not in OPERATORS:
+        if self.operator.token_type not in OPERATORS:
             error = Error([])
             error.append(f"Operator \'{self.operator}\' is invalid.",
                          self.origin)
             return error
-        operator = OPERATORS[self.operator]
+        operator = OPERATORS[self.operator.token_type]
         args = []
 
         if operator[0]: # LEFT OPERAND

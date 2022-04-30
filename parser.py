@@ -29,6 +29,47 @@ class Parser:
         raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
 
 
+    def parse_unitary_operator(self) -> Expression:
+        operator = self.tokenizer.get_next_token()
+        return Operation(None, operator, self.parse_line())
+
+
+    def parse_parentheses(self) -> Expression:
+        self.tokenizer.get_next_token()
+        self.parse_term(self.parse_line())
+
+
+    def parse_mul_div(self, l_operand) -> Expression:
+        operator = self.tokenizer.get_next_token()
+        right = self.tokenizer.get_next_token()
+
+        if right.is_token_type(TokenType.OPEN_PAR):
+            return self.parse_term(Operation(l_operand, operator,
+                self.parse_parentheses()))
+        else:
+            r_operand = right
+            return self.parse_term(Operation(l_operand, operator, r_operand))       
+
+
+    def parse_add_sub(self, l_operand) -> Expression:
+        operator = self.tokenizer.get_next_token()
+        
+        return Operation(l_operand, operator, self.parse_line())
+
+    
+    def parse_term(self, l_operand) -> Expression:
+        operator = self.tokenizer.peek_next_token()
+
+        if operator.is_token_type(TokenType.MULTIPLY) \
+            or operator.is_token_type(TokenType.DIVIDE):
+            return self.parse_mul_div(l_operand)
+        elif operator.is_token_type(TokenType.ADD) \
+            or operator.is_token_type(TokenType.SUBTRACT):
+            return self.parse_add_sub(l_operand)
+        elif operator.is_token_type(TokenType.CLOSING_PAR):
+            return l_operand
+
+
     def parse_line(self) -> Expression:
         """
         # TODO: Error handling
@@ -47,26 +88,16 @@ class Parser:
         >>> tree.evaluate({})
         14
         """
-        left = self.tokenizer.get_next_token()
+        left = self.tokenizer.peek_next_token()
 
-        if left.token_type == TokenType.OPEN_PAR:
-            return self.parse_line()
-        elif left.is_operator():
-            operator = left.token_type
-            operand = self.parse_line()
-            return Operation(None, operator, operand)
+        if left.is_operator():
+            return self.parse_unitary_operator()
+        elif left.is_token_type(TokenType.OPEN_PAR):
+            self.parse_parentheses()
         else:
-            l_operand = self.get_as_expression(left)
-            middle = self.tokenizer.get_next_token()
-
-            if middle.is_token_type(TokenType.CLOSING_PAR) or middle.is_token_type(TokenType.EOF) \
-                or middle.is_token_type(TokenType.EOL):
-                return l_operand
-            elif middle.is_token_type(TokenType.ADD):
-                operator = middle.token_type
-                r_operand = self.parse_line()
-                return Operation(l_operand, operator, r_operand)
-
+            l_operand = self.tokenizer.get_next_token()
+            return self.parse_term(l_operand)
+            
 
 if __name__ == "__main__":
     import doctest
