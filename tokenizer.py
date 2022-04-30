@@ -32,6 +32,7 @@ class TokenType(enum.Enum):
     TO_INT = 19
     TO_FLOAT = 20
     TO_BOOL = 21
+    NOT = 21
 
 
     def is_operator(self):
