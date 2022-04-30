@@ -2,8 +2,8 @@ import enum
 from typing import Union
 
 
-ROTATING_TOKEN_COUNT = 2
-ROTATING_TOKEN_OFFSET = 8
+ROTATING_TOKEN_COUNT = 5
+ROTATING_TOKEN_OFFSET = 9
 
 
 class TokenType(enum.Enum):
@@ -17,14 +17,18 @@ class TokenType(enum.Enum):
     """
     UNKNOWN = 0
     EOF = 1
-    OPEN_PAR = 2
-    CLOSING_PAR = 3
-    NAME = 4
-    INT = 5
-    FLOAT = 6
-    STRING = 7
-    ADD = 8
-    ASSIGN = 9
+    EOL = 2
+    OPEN_PAR = 3
+    CLOSING_PAR = 4
+    NAME = 5
+    INT = 6
+    FLOAT = 7
+    STRING = 8
+    ADD = 9
+    SUBTRACT = 10
+    MULTIPLY = 11
+    DIVIDE = 12
+    ASSIGN = 13
 
 
     def is_operator(self):
@@ -74,7 +78,7 @@ class Token:
 class Tokenizer:
     """
     TODO: Error handling
-    
+
     Tokenize a string it receives as input
     """
     script: str
@@ -171,7 +175,7 @@ class Tokenizer:
         Token<Type: EOF, Payload: None>
         """
         self.index += 1
-        while self.index < len(self.script) and self.script[self.index] == " ":
+        while self.index < len(self.script) and self.script[self.index].isspace():
             self.index += 1
 
         if self.index >= len(self.script):
@@ -179,8 +183,10 @@ class Tokenizer:
 
         if self.script[self.index] == ")":
             return Token(TokenType.OPEN_PAR)
-        if self.script[self.index] == "(":
+        elif self.script[self.index] == "(":
             return Token(TokenType.CLOSING_PAR)
+        elif self.script[self.index] == "|":
+            return Token(TokenType.EOL)
         
         if self.script[self.index].isdigit():
             return self._get_numerical_token()

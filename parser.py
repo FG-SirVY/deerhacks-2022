@@ -4,9 +4,10 @@ from tokenizer import Tokenizer, TokenType, Token
 
 class Parser:
     """
-    Parses a string using Tokenizer into a tree of Expressions.
+    Parse a string using Tokenizer into a tree of Expressions.
     """
     tokenizer: Tokenizer
+
 
     def __init__(self, script: str) -> None:
         """
@@ -28,18 +29,19 @@ class Parser:
         raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
 
 
-    def parse(self) -> Expression:
+    def parse_line(self) -> Expression:
         """
-        Parse one it. FINALLY.
+        # TODO: Error handling
+        Parse one line. FINALLY.
 
         >>> p = Parser("5 A 6")
-        >>> tree = p.parse()
+        >>> tree = p.parse_line()
         >>> tree
         Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Constant<c: 6>>
         >>> tree.evaluate({})
         11
         >>> p = Parser("5 A 6 B 3")
-        >>> tree = p.parse()
+        >>> tree = p.parse_line()
         >>> tree
         Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Operation<l: Constant<c: 6>, op: TokenType.ADD, r: Constant<c: 3>>>
         >>> tree.evaluate({})
@@ -48,24 +50,24 @@ class Parser:
         left = self.tokenizer.get_next_token()
 
         if left.token_type == TokenType.OPEN_PAR:
-            return self.parse()
+            return self.parse_line()
         elif left.is_operator():
             operator = left.token_type
-            operand = self.parse()
+            operand = self.parse_line()
             return Operation(None, operator, operand)
         else:
             l_operand = self.get_as_expression(left)
             middle = self.tokenizer.get_next_token()
 
-            if middle.is_token_type(TokenType.CLOSING_PAR) or middle.is_token_type(TokenType.EOF):
+            if middle.is_token_type(TokenType.CLOSING_PAR) or middle.is_token_type(TokenType.EOF) \
+                or middle.is_token_type(TokenType.EOL):
                 return l_operand
             elif middle.is_token_type(TokenType.ADD):
                 operator = middle.token_type
-                r_operand = self.parse()
+                r_operand = self.parse_line()
                 return Operation(l_operand, operator, r_operand)
 
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
