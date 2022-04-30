@@ -58,6 +58,11 @@ class Parser:
         return Operation(l_operand, operator, self.parse_line())
 
     
+    def parse_assignment(self, l_operand) -> Expression:
+        operator = self.tokenizer.get_next_token().token_type
+        return Operation(l_operand, operator, self.parse_line())
+
+    
     def parse_term(self, l_operand) -> Expression:
         operator = self.tokenizer.peek_next_token()
 
@@ -67,6 +72,8 @@ class Parser:
         elif operator.is_token_type(TokenType.ADD) \
             or operator.is_token_type(TokenType.SUBTRACT):
             return self.parse_add_sub(l_operand)
+        elif operator.is_token_type(TokenType.ASSIGN):
+            return self.parse_assignment(l_operand)
         else:
             return l_operand
 
