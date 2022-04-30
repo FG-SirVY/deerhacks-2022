@@ -1,32 +1,33 @@
 from typing import Any, Optional, Union
 
 
-class InvalidOperator(Exception):
-    pass
-class InvalidOperand(Exception):
-    pass
-
-
-def throw_exception(origin: int, message: str, exc_type: Exception):
+class Error:
     """
-    Throws exception of type <exc_type> with message <message>.
-    The message will contain a line number <origin> at the front, if <origin>
-    is not -1.
     """
-    if origin < 0:
-        raise exc_type(message)
-    else:
-        raise exc_type(f"Line {origin}: " + message)
+    traceback: list[str]
+
+    def __init__(self, traceback: list[str] = []):
+        self.traceback = traceback
+    
+    def __str__(self):
+        return '\n'.join(self.traceback)
+
+    def append(self, message: str, origin: int):
+        if origin < 0:
+            self.traceback.append(message)
+        else:
+            self.traceback.append(f"Line {origin}: {message}")
 
 
-def add(args: list[Union[int, float]]) -> Union[int, float]:
+def add(args: list[Union[int, float]]) -> Union[int, float, Error]:
     """
     Add two arguments in <args>.
     If both are of type int, the sum is returned as an int.
     Otherwise, the sum is returned as a float.
     """
     if len(args) != 2:
-        raise ValueError("add operator requires exactly 2 arguments")
+        return Error([f"Add operator requires exactly 2 arguments."])
+    # TODO: Add type check
     if isinstance(args[0], int) and isinstance(args[1], int):
         return args[0] + args[1]
     return float(args[0]) + float(args[1])
@@ -96,23 +97,35 @@ class Operation(Expression):
     
     def evaluate(self) -> Any:
         if self.operator not in OPERATORS:
-            throw_exception(self.origin,
-                            f"Operator {self.operator} is invalid.",
-                            InvalidOperator)
+            error = Error()
+            error.append(f"Operator {self.operator} is invalid.", self.origin)
+            return error
         operator = OPERATORS[self.operator]
         args = []
         if operator[0]:
             if self.l_operand is None:
-                throw_exception(self.origin, "Missing left operand",
-                                InvalidOperand)
-            args.append(self.l_operand.evaluate())
+                error = Error()
+                error.append(f"Missing left operand", self.origin)
+                return error
+            value = self.l_operand.evaluate()
+            if isinstance(value, Error):
+                value.append("", self.origin)
+                return value
+            args.append(value)
         if operator[1]:
             if self.r_operand is None:
-                throw_exception(self.origin, "Missing right operand",
-                                InvalidOperand)
-            args.append(self.r_operand.evaluate())
+                error = Error()
+                error.append(f"Missing right operand", self.origin)
+                return error
+            value = self.r_operand.evaluate()
+            if isinstance(value, Error):
+                value.append("", self.origin)
+                return value
+            args.append(value)
         return operator[2](args)
 
 
-epic_expr = Operation(Constant(5), 'A', Constant(3))
+epic_expr = Operation(Operation(Constant(3, 0), 'A', Constant(5, 0), 0), 'A', Constant(3, 0), 0)
+# equivalent:
+# 3 + 5 + 3
 print(epic_expr.evaluate())
