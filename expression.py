@@ -193,6 +193,65 @@ def op_ret(args: list[Any], env: dict[str, Any]) -> Union['RetVal', Error]:
         return Error("RETURN operator requires exactly 1 argument.")
     return RetVal(args[0])
 
+def op_str(args: list[Any], env: dict[str, Any]) -> Union[str, Error]:
+    """
+    Return args[0] as a string.
+
+    Throws if:
+        - <args> does not have exactly 1 object
+        - the type of objects in <args> are not str, int, float, list, bool, or dict
+    """
+    if len(args) != 1:
+        return Error("STR operator requires exactly 1 argument.")
+    try:
+        return str(args[0])
+    except TypeError as te:
+        return Error(str(te))
+
+def op_int(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    """
+    Return args[0] as a int.
+
+    Throws if:
+        - <args> does not have exactly 1 object
+        - the type of objects in <args> are not str, int, bool, or float
+    """
+    if len(args) != 1:
+        return Error("INT operator requires exactly 1 argument.")
+    try:
+        return int(args[0])
+    except TypeError as te:
+        return Error(str(te))
+
+def op_float(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    """
+    Return args[0] as a float.
+
+    Throws if:
+        - <args> does not have exactly 1 object
+        - the type of objects in <args> are not str, int, bool, or float
+    """
+    if len(args) != 1:
+        return Error("FLOAT operator requires exactly 1 argument.")
+    try:
+        return float(args[0])
+    except TypeError as te:
+        return Error(str(te))
+
+def op_bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    """
+    Return args[0] as a bool.
+
+    Throws if:
+        - <args> does not have exactly 1 object
+        - the type of objects in <args> are not str, int, float or bool
+    """
+    if len(args) != 1:
+        return Error("BOOL operator requires exactly 1 argument.")
+    try:
+        return bool(args[0])
+    except TypeError as te:
+        return Error(str(te))
 
 # dict[str, tuple[bool, bool, Callable]]
 # [id (one char), [has left operand, has right operand, operator function]]
@@ -203,6 +262,9 @@ OPERATORS = \
     TokenType.MULTIPLY: (True, True, op_mul),
     TokenType.DIVIDE: (True, True, op_div),
     TokenType.ASSIGN: (True, True, op_ass)
+    TokenType.TO_INT: (True, True, op_int),
+    TokenType.TO_FLOAT: (True, True, op_float),
+    TokenType.TO_BOOL: (True, True, op_bool),
 }
 
 
