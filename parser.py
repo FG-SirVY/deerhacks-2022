@@ -1,4 +1,4 @@
-from expression import Expression, Name, Operation, Constant
+from expression import Expression, Invocation, Name, Operation, Constant
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -65,6 +65,22 @@ class Parser:
         return Operation(l_operand, operator, self.parse_line())
 
     
+    def parse_invocation(self, name: Token) -> Expression:
+        assert name.token_type == TokenType.NAME
+
+        self.tokenizer.get_next_token()
+
+        arguments = []
+        next_operator = TokenType.COMMA
+        while next_operator == TokenType.COMMA:
+            arguments.append(self.parse_line())
+            next_operator = self.tokenizer.get_next_token()
+
+        assert next_operator == TokenType.CLOSING_PAR
+
+        return Invocation(name.payload, arguments)
+
+    
     def parse_term(self, l_operand) -> Expression:
         operator = self.tokenizer.peek_next_token()
 
@@ -76,6 +92,8 @@ class Parser:
             return self.parse_add_sub(l_operand)
         elif operator.is_token_type(TokenType.ASSIGN):
             return self.parse_assignment(l_operand)
+        elif operator.is_token_type(TokenType.OPEN_PAR):
+            return self.parse_invocation(l_operand)
         else:
             return l_operand
 

@@ -504,3 +504,4 @@ if __name__ == "__main__":
     ])
     ivk = Invocation("max", [Constant(5), Constant(6)])
     print(ivk.evaluate({'max': fmax}))
+    
