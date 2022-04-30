@@ -7,6 +7,14 @@ ROTATING_TOKEN_OFFSET = 8
 
 
 class TokenType(enum.Enum):
+    """
+    The type which a token has. There are a few subtypes:
+    UNKNOWN and EOF as control tokens,
+    OPEN_PAR, CLOSING_PAR for parentheses.
+    NAME for names like variable names.
+    INT, FLOAT, STRING basic literals.
+    ADD, ASSIGN as operators.
+    """
     UNKNOWN = 0
     EOF = 1
     OPEN_PAR = 2
@@ -18,39 +26,63 @@ class TokenType(enum.Enum):
     ADD = 8
     ASSIGN = 9
 
+
     def is_operator(self):
+        """
+        Checks whether a given token is an operator.
+        """
         return self.value >= 8
 
 
 class Token:
+    """
+    A Token - what can I say more.
+    """
     token_type: TokenType
     payload: Union[str, int]
 
-    def __init__(self, token_type: TokenType, payload: Union[str, int, float] = None):
+
+    def __init__(self, token_type: TokenType, payload: Union[str, int, float] = None) -> None:
+        """
+        Initialize token_type and payload.
+        """
         self.token_type = token_type
         self.payload = payload
 
-    def __repr__(self):
+
+    def __repr__(self) -> str:
+        """
+        Create a string representation of this Token.
+        """
         return f"Token<Type: {self.token_type.name}, Payload: {self.payload}>"
 
 
-    def is_operator(self):
+    def is_operator(self) -> bool:
+        """
+        Check whether this token is an operator.
+        """
         return self.token_type.is_operator()
 
 
-    def is_token_type(self, token_type: TokenType):
+    def is_token_type(self, token_type: TokenType) -> bool:
+        """
+        Check whether this token is a of a specified kind.
+        """
         return self.token_type == token_type
 
 
 class Tokenizer:
-    #TODO: Error handling
-
+    """
+    TODO: Error handling
+    
+    Tokenize a string it receives as input
+    """
     script: str
     index: int
     shift: int
 
 
-    def __init__(self, script: str):
+    def __init__(self, script: str) -> None:
         """
         Initialize script, index and shift
         """
@@ -59,7 +91,7 @@ class Tokenizer:
         self.shift = 0
 
 
-    def get_numerical_token(self):
+    def _get_numerical_token(self) -> Token:
         """
         Parse a numerical token from the script.
         
@@ -75,7 +107,7 @@ class Tokenizer:
         return Token(TokenType.INT, int(self.script[start:self.index]))
 
 
-    def get_string_token(self):
+    def _get_string_token(self) -> Token:
         """
         Parse a string token from the script.
 
@@ -91,7 +123,7 @@ class Tokenizer:
         return Token(TokenType.STRING, int(self.script[start:self.index]))
 
 
-    def get_operator_token(self):
+    def _get_operator_token(self) -> Token:
         """
         Parse a jumbled operator token from the script.
 
@@ -108,7 +140,7 @@ class Tokenizer:
         return token
 
 
-    def get_name_token(self):
+    def _get_name_token(self) -> Token:
         """
         Parse a name from the script
 
@@ -124,7 +156,7 @@ class Tokenizer:
         return Token(TokenType.NAME, payload=self.script[start:self.index])
 
 
-    def get_next_token(self):
+    def get_next_token(self) -> Token:
         """
         Parses the next token from the script.
 
@@ -151,13 +183,13 @@ class Tokenizer:
             return Token(TokenType.CLOSING_PAR)
         
         if self.script[self.index].isdigit():
-            return self.get_numerical_token()
+            return self._get_numerical_token()
 
         if self.script[self.index] == "\"":
-            return self.get_string_token()
+            return self._get_string_token()
 
         if self.script[self.index].isupper():
-            return self.get_operator_token()
+            return self._get_operator_token()
 
         if self.script[self.index].isalpha():
-            return self.get_name_token()
+            return self._get_name_token()

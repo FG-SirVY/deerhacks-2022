@@ -3,13 +3,24 @@ from tokenizer import Tokenizer, TokenType, Token
 
 
 class Parser:
+    """
+    Parses a string using Tokenizer into a tree of Expressions.
+    """
     tokenizer: Tokenizer
 
-    def __init__(self, script: str):
+    def __init__(self, script: str) -> None:
+        """
+        Initialize the Tokenizer on the given script.
+        """
         self.tokenizer = Tokenizer(script)
 
     
-    def get_as_expression(self, token: Token):
+    def get_as_expression(self, token: Token) -> Expression:
+        """
+        Turn a token into token.
+
+        Possible for float, int and string tokens.
+        """
         if token.is_token_type(TokenType.FLOAT) or token.is_token_type(TokenType.INT) \
             or token.is_token_type(TokenType.STRING):
             return Constant(token.payload)
@@ -19,7 +30,8 @@ class Parser:
 
     def parse(self) -> Expression:
         """
-        Parse one outer expression
+        Parse one it. FINALLY.
+
         >>> p = Parser("5 A 6")
         >>> tree = p.parse()
         >>> tree
