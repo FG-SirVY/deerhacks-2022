@@ -2,8 +2,8 @@ import enum
 from typing import Union
 
 
-ROTATING_TOKEN_COUNT = 5
-ROTATING_TOKEN_OFFSET = 9
+ROTATING_TOKEN_COUNT = 10
+ROTATING_TOKEN_OFFSET = 10
 
 
 class TokenType(enum.Enum):
@@ -18,28 +18,28 @@ class TokenType(enum.Enum):
     UNKNOWN = 0
     EOF = 1
     EOL = 2
-    OPEN_PAR = 3
-    CLOSING_PAR = 4
-    NAME = 5
-    INT = 6
-    FLOAT = 7
-    STRING = 8
-    ADD = 9
-    SUBTRACT = 10
-    MULTIPLY = 11
-    DIVIDE = 12
-    ASSIGN = 13
-    GREATER_THAN = 14
-    GREATER_EQUAL = 15
-    LESS_THAN = 16
-    LESS_EQUAL = 17
-    RETURN = 18
+    RETURN = 3
+    OPEN_PAR = 4
+    CLOSING_PAR = 5
+    NAME = 6
+    INT = 7
+    FLOAT = 8
+    STRING = 9
+    ADD = 10
+    SUBTRACT = 11
+    MULTIPLY = 12
+    DIVIDE = 13
+    ASSIGN = 14
+    GREATER_THAN = 15
+    GREATER_EQUAL = 16
+    LESS_THAN = 17
+    LESS_EQUAL = 18
     TO_INT = 19
     TO_FLOAT = 20
     TO_BOOL = 21
-    NOT = 21
-    AND = 22
-    OR = 23
+    NOT = 22
+    AND = 23
+    OR = 24
 
 
     def is_operator(self):
@@ -243,6 +243,8 @@ class Tokenizer:
             return Token(TokenType.CLOSING_PAR)
         elif self.script[self.index] == "|":
             return Token(TokenType.EOL)
+        elif self.script[self.index] == ",":
+            return Token(TokenType.COMMA)
         
         if self.script[self.index].isdigit():
             return self._get_numerical_token()

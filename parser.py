@@ -1,4 +1,4 @@
-from expression import Expression, Name, Operation, Constant
+from expression import Expression, Invocation, Name, Operation, Constant
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -26,7 +26,7 @@ class Parser:
             or token.is_token_type(TokenType.STRING):
             return Constant(token.payload)
         elif token.is_token_type(TokenType.NAME):
-            return Name(token.payload)
+            return Constant(Name(token.payload))
 
         raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
 
@@ -65,6 +65,22 @@ class Parser:
         return Operation(l_operand, operator, self.parse_line())
 
     
+    def parse_invocation(self, name: Token) -> Expression:
+        assert name.token_type == TokenType.NAME
+
+        self.tokenizer.get_next_token()
+
+        arguments = []
+        next_operator = TokenType.COMMA
+        while next_operator == TokenType.COMMA:
+            arguments.append(self.parse_line())
+            next_operator = self.tokenizer.get_next_token()
+
+        assert next_operator == TokenType.CLOSING_PAR
+
+        return Invocation(name.payload, arguments)
+
+    
     def parse_term(self, l_operand) -> Expression:
         operator = self.tokenizer.peek_next_token()
 
@@ -76,6 +92,8 @@ class Parser:
             return self.parse_add_sub(l_operand)
         elif operator.is_token_type(TokenType.ASSIGN):
             return self.parse_assignment(l_operand)
+        elif operator.is_token_type(TokenType.OPEN_PAR):
+            return self.parse_invocation(l_operand)
         else:
             return l_operand
 
@@ -88,13 +106,13 @@ class Parser:
         >>> p = Parser("5 A 6")
         >>> tree = p.parse_line()
         >>> tree
-        Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Constant<c: 6>>
+        Operation<Constant<5>, TokenType.ADD, Constant<6>>
         >>> tree.evaluate({})
         11
         >>> p = Parser("5 A 6 B 3")
         >>> tree = p.parse_line()
         >>> tree
-        Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Operation<l: Constant<c: 6>, op: TokenType.ADD, r: Constant<c: 3>>>
+        Operation<Constant<5>, TokenType.ADD, Operation<Constant<6>, TokenType.ADD, Constant<3>>>
         >>> tree.evaluate({})
         14
         >>> Parser("3 C )5 B 6(").parse_line().evaluate({})
@@ -106,7 +124,10 @@ class Parser:
         >>> Parser("5 A 6 D 3").parse_line().evaluate({})
         23
         >>> env = {}
-        >>> Parser("test E 4").parse_line().evaluate(env)
+        >>> parsed = Parser("test E 4").parse_line()
+        >>> parsed
+        Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<4>>
+        >>> parsed.evaluate(env)
         >>> env["test"]
         4
         """

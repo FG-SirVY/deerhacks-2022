@@ -365,7 +365,12 @@ class Constant(Expression):
     def __init__(self, value: Any, origin: int = -1):
         Expression.__init__(self, origin)
         self.value = value
-    
+
+
+    def __repr__(self) -> str:
+        return f"Constant<{self.value}>"
+
+
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
         Return the constant value held within this expression.
@@ -388,6 +393,9 @@ class Name(Expression):
     def __init__(self, name: str, origin: int = -1):
         Expression.__init__(self, origin)
         self.name = name
+
+    def __repr__(self) -> str:
+        return f"Name<{self.name}>"
 
     def assign(self, value: Any, env: dict[str, Any]) -> None:
         """
@@ -441,6 +449,11 @@ class Operation(Expression):
         self.l_operand = l_operand
         self.operator = operator
         self.r_operand = r_operand
+
+
+    def __repr__(self) -> str:
+        return f"Operation<{self.l_operand}, {self.operator}, {self.r_operand}>"
+    
     
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
@@ -627,6 +640,7 @@ class Invocation(Expression):
             result.append("", self.origin)
         return result
 
+        
 
 if __name__ == "__main__":
     import doctest
