@@ -2,8 +2,8 @@ import enum
 from typing import Union
 
 
-ROTATING_TOKEN_COUNT = 10
-ROTATING_TOKEN_OFFSET = 10
+ROTATING_TOKEN_COUNT = 16
+ROTATING_TOKEN_OFFSET = 11
 
 
 class TokenType(enum.Enum):
@@ -18,36 +18,37 @@ class TokenType(enum.Enum):
     UNKNOWN = 0
     EOF = 1
     EOL = 2
-    RETURN = 3
-    OPEN_PAR = 4
-    CLOSING_PAR = 5
-    NAME = 6
-    INT = 7
-    FLOAT = 8
-    STRING = 9
-    ADD = 10
-    SUBTRACT = 11
-    MULTIPLY = 12
-    DIVIDE = 13
-    ASSIGN = 14
-    GREATER_THAN = 15
-    GREATER_EQUAL = 16
-    LESS_THAN = 17
-    LESS_EQUAL = 18
-    TO_INT = 19
-    TO_FLOAT = 20
-    TO_BOOL = 21
-    NOT = 22
-    AND = 23
-    OR = 24
-    MOD = 25
+    COMMA = 3
+    RETURN = 4
+    OPEN_PAR = 5
+    CLOSING_PAR = 6
+    NAME = 7
+    INT = 8
+    FLOAT = 9
+    STRING = 10
+    ADD = 11 #A
+    SUBTRACT = 12 #B
+    MULTIPLY = 13 #C
+    DIVIDE = 14 #D
+    ASSIGN = 15 #E
+    GREATER_THAN = 16 #F
+    GREATER_EQUAL = 17 #G
+    LESS_THAN = 18 #H
+    LESS_EQUAL = 19 #I
+    TO_INT = 20 #J
+    TO_FLOAT = 21 #K
+    TO_BOOL = 22 #L
+    NOT = 23 #M
+    AND = 24 #N
+    OR = 25 #O
+    MOD = 26 #P
 
 
     def is_operator(self):
         """
         Checks whether a given token is an operator.
         """
-        return self.value >= 8
+        return self.value >= ROTATING_TOKEN_OFFSET
 
 
 class Token:

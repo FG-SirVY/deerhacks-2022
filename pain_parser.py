@@ -26,7 +26,7 @@ class Parser:
             or token.is_token_type(TokenType.STRING):
             return Constant(token.payload)
         elif token.is_token_type(TokenType.NAME):
-            return Constant(Name(token.payload))
+            return Name(token.payload)
 
         raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
 
@@ -62,7 +62,7 @@ class Parser:
     
     def parse_assignment(self, l_operand) -> Expression:
         operator = self.tokenizer.get_next_token().token_type
-        return Operation(l_operand, operator, self.parse_line())
+        return Operation(Constant(l_operand), operator, self.parse_line())
 
     
     def parse_invocation(self, name: Token) -> Expression:
@@ -94,6 +94,10 @@ class Parser:
             return self.parse_assignment(l_operand)
         elif operator.is_token_type(TokenType.OPEN_PAR):
             return self.parse_invocation(l_operand)
+        elif operator.is_token_type(TokenType.EOF) \
+            or operator.is_token_type(TokenType.EOL):
+            self.tokenizer.get_next_token()
+            return l_operand
         else:
             return l_operand
 
@@ -137,6 +141,8 @@ class Parser:
             return self.parse_unitary_operator()
         elif left.is_token_type(TokenType.OPEN_PAR):
             return self.parse_parentheses()
+        elif left.is_token_type(TokenType.EOF) or left.is_token_type(TokenType.EOL):
+            return None
         else:
             l_operand = self.get_as_expression(self.tokenizer.get_next_token())
             return self.parse_term(l_operand)

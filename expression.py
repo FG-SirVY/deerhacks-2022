@@ -1,6 +1,5 @@
 from typing import Any, Optional, Union
 from tokenizer import TokenType
-import math
 
 
 class Error:
