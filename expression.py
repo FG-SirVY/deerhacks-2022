@@ -304,10 +304,10 @@ OPERATORS = \
     TokenType.MULTIPLY: (True, True, op_mul),
     TokenType.DIVIDE: (True, True, op_div),
     TokenType.ASSIGN: (True, True, op_ass),
-    TokenType.TO_INT: (True, True, op_int),
-    TokenType.TO_FLOAT: (True, True, op_float),
-    TokenType.TO_BOOL: (True, True, op_bool),
-    TokenType.NOT: (True, True, op_not),
+    TokenType.TO_INT: (True, False, op_int),
+    TokenType.TO_FLOAT: (True, False, op_float),
+    TokenType.TO_BOOL: (True, False, op_bool),
+    TokenType.NOT: (True, False, op_not),
     TokenType.AND: (True, True, op_and),
     TokenType.OR: (True, True, op_or)
 }
