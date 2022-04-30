@@ -5,15 +5,9 @@ import sys
 
 def prepare_environment() -> Environment:
     env = Environment({})
-    env.local_vars["print"] = Function(["x"], Block([
-        Builtin(print, [Name("x")])
-    ]))
-    env.local_vars["min"] = Function(["x", "y"], Block([
-        Builtin(min, [Name("x"), Name("y")])
-    ]))
-    env.local_vars["max"] = Function(["x", "y"], Block([
-        Builtin(max, [Name("x"), Name("y")])
-    ]))
+    env.local_vars["print"] = Function(["x"], Builtin(print, [Name("x")]))
+    env.local_vars["min"] = Function(["x", "y"], Builtin(min, [Name("x"), Name("y")]))
+    env.local_vars["max"] = Function(["x", "y"], Builtin(max, [Name("x"), Name("y")]))
 
     return env
 
@@ -30,6 +24,8 @@ def run_file(fname: str, env: Environment) -> None:
     432
     >>> run_file("test-scripts/print.pain", prepare_environment())
     5
+    >>> run_file("test-scripts/min_max_print.pain", prepare_environment())
+    6
     """
     expressions: list[Expression] = []
 

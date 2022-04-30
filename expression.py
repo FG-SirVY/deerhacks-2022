@@ -644,7 +644,7 @@ class Builtin(Expression):
         result = self.func(*args)
         if isinstance(result, Error):
             result.append("", self.origin)
-        return result   
+        return RetVal(result)
 
 
 class Invocation(Expression):
@@ -658,6 +658,9 @@ class Invocation(Expression):
         Expression.__init__(self, origin)
         self.args = args
         self.func = func
+
+    def __repr__(self) -> str:
+        return f"Invocation<{self.func}, {self.args}>"
     
     def evaluate(self, env: Environment) -> Any:
         """
