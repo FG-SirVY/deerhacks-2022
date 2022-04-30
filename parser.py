@@ -1,4 +1,4 @@
-from expression import Expression, Operation, Constant
+from expression import Expression, Name, Operation, Constant
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -25,6 +25,8 @@ class Parser:
         if token.is_token_type(TokenType.FLOAT) or token.is_token_type(TokenType.INT) \
             or token.is_token_type(TokenType.STRING):
             return Constant(token.payload)
+        elif token.is_token_type(TokenType.NAME):
+            return Constant(Name(token.payload))
 
         raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
 
@@ -103,6 +105,13 @@ class Parser:
         33
         >>> Parser("5 A 6 D 3").parse_line().evaluate({})
         23
+        >>> env = {}
+        >>> parsed = Parser("test E 4").parse_line()
+        >>> parsed
+        Operation<l: Constant<c: Name<n: test>>, op: TokenType.ASSIGN, r: Constant<c: 4>>
+        >>> parsed.evaluate(env)
+        >>> env["test"]
+        4
         """
         left = self.tokenizer.peek_next_token()
 

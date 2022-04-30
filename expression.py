@@ -262,6 +262,9 @@ class Name(Expression):
         Expression.__init__(self, origin)
         self.name = name
 
+    def __repr__(self) -> str:
+        return f"Name<n: {self.name}>"
+
     def assign(self, value: Any, env: dict[str, Any]) -> None:
         """
         Assign <value> to the name in env.

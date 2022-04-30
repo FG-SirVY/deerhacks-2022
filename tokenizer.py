@@ -2,8 +2,8 @@ import enum
 from typing import Union
 
 
-ROTATING_TOKEN_COUNT = 5
-ROTATING_TOKEN_OFFSET = 9
+ROTATING_TOKEN_COUNT = 9
+ROTATING_TOKEN_OFFSET = 10
 
 
 class TokenType(enum.Enum):
