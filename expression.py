@@ -219,7 +219,7 @@ class Operators:
             return Error("RETURN operator requires exactly 1 operand.")
         return RetVal(args[0])
     
-    def str(args: list[Any], env: dict[str, Any]) -> Union[str, Error]:
+    def _str(args: list[Any], env: dict[str, Any]) -> Union[str, Error]:
         """
         Return args[0] as a string.
         Throws if:
@@ -233,7 +233,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def int(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _int(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return args[0] as a int.
         Throws if:
@@ -247,7 +247,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def float(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _float(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return args[0] as a float.
         Throws if:
@@ -261,7 +261,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return args[0] as a bool.
         Throws if:
@@ -275,7 +275,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def not(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _not(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the negation of args[0].
         Throws if:
@@ -288,7 +288,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def and(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _and(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the "and" of args[0] and args[1].
         Throws if:
@@ -301,7 +301,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the "or" of args[0] and args[1].
         Throws if:
@@ -314,7 +314,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the mod of args[0] when divided by args[1].
         Throws if:
