@@ -59,9 +59,34 @@ class Error:
                 self.traceback.append(f"Line {origin}")
 
 
+class Environment:
+    """
+    """
+    parent_env: 'Environment'
+    local_vars: dict[str, Any]
+
+    def __init__(self, local_vars: dict[str, any], parent_env: 'Environment' = None):
+        self.local_vars = local_vars
+        self.parent_env = parent_env
+    
+    def get_value(self, name: str) -> Any:
+        if name in self.local_vars:
+            return self.local_vars[name]
+        elif self.parent_env is not None:
+            return self.parent_env.get_value(name)
+        return Error(f"Name \'{name}\' is not defined.")
+    
+    def get_dict_of(self, name: str) -> dict[str, Any]:
+        if name in self.local_vars:
+            return self.local_vars
+        elif self.parent_env is not None:
+            return self.parent_env.get_dict_of(name)
+        return Error(f"Name \'{name}\' is not defined.")
+
+
 class Operators:
     def add(args: list[Union[int, float]],
-            env: dict[str, Any]) -> Union[int, float, Error]:
+            env: Environment) -> Union[int, float, Error]:
         """
         Add two arguments in <args> and return their sum. <env> is ignored.
 
@@ -77,7 +102,7 @@ class Operators:
             return Error(str(te))
 
     def sub(args: list[Union[int, float]],
-            env: dict[str, Any]) -> Union[int, float, Error]:
+            env: Environment) -> Union[int, float, Error]:
         """
         Subtract two arguments in <args> (args[0] - args[1]) and return their
         difference. <env> is ignored.
@@ -94,7 +119,7 @@ class Operators:
             return Error(str(te))
 
     def mul(args: list[Union[int, float]],
-            env: dict[str, Any]) -> Union[int, float, Error]:
+            env: Environment) -> Union[int, float, Error]:
         """
         Multiply two arguments in <args> and return their product. <env> is ignored.
 
@@ -110,7 +135,7 @@ class Operators:
             return Error(str(te))
 
     def div(args: list[Union[int, float]],
-            env: dict[str, Any]) -> Union[int, float, Error]:
+            env: Environment) -> Union[int, float, Error]:
         """
         Divide two arguments in <args> (args[0] / args[1]) and return their
         quotient. <env> is ignored.
@@ -129,10 +154,10 @@ class Operators:
         except ZeroDivisionError as zde:
             return Error(str(zde))
 
-    def grt(args: list[Any], env: dict[str, Any]) -> bool:
+    def grt(args: list[Any], env: Environment) -> bool:
         """
         Compare two arguments in <args> (args[0] > args[1]) and return True iff
-        args[0] > args[1].
+        args[0] > args[1]. <env> is ignored.
 
         Throws if:
             - <args> does not have exactly 2 objects
@@ -145,7 +170,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def geq(args: list[Any], env: dict[str, Any]) -> bool:
+    def geq(args: list[Any], env: Environment) -> bool:
         """
         Compare two arguments in <args> (args[0] >= args[1]) and return True iff
         args[0] >= args[1].
@@ -161,7 +186,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def les(args: list[Any], env: dict[str, Any]) -> bool:
+    def les(args: list[Any], env: Environment) -> bool:
         """
         Compare two arguments in <args> (args[0] < args[1]) and return True iff
         args[0] < args[1].
@@ -177,7 +202,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def leq(args: list[Any], env: dict[str, Any]) -> bool:
+    def leq(args: list[Any], env: Environment) -> bool:
         """
         Compare two arguments in <args> (args[0] <= args[1]) and return True iff
         args[0] <= args[1].
@@ -193,7 +218,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def ass(args: list[Any], env: dict[str, Any]) -> Optional[Error]:
+    def ass(args: list[Any], env: Environment) -> Optional[Error]:
         """
         Assign args[1] to args[0], using the assign method.
 
@@ -207,9 +232,9 @@ class Operators:
             return Error("ASSIGN operator requires assignable left operand.")
         args[0].assign(args[1], env)
 
-    def ret(args: list[Any], env: dict[str, Any]) -> Union['RetVal', Error]:
+    def ret(args: list[Any], env: Environment) -> Union['RetVal', Error]:
         """
-        Return args[0] as a RetVal to signify the termination of a sequence with a
+        Return args[0] as a RetVal to signify the termination of a function with a
         returned value.
 
         Throws if:
@@ -219,7 +244,7 @@ class Operators:
             return Error("RETURN operator requires exactly 1 operand.")
         return RetVal(args[0])
     
-    def _str(args: list[Any], env: dict[str, Any]) -> Union[str, Error]:
+    def _str(args: list[Any], env: Environment) -> Union[str, Error]:
         """
         Return args[0] as a string.
         Throws if:
@@ -233,7 +258,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _int(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _int(args: list[Any], env: Environment) -> Union[int, Error]:
         """
         Return args[0] as a int.
         Throws if:
@@ -247,7 +272,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _float(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _float(args: list[Any], env: Environment) -> Union[int, Error]:
         """
         Return args[0] as a float.
         Throws if:
@@ -261,7 +286,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _bool(args: list[Any], env: Environment) -> Union[int, Error]:
         """
         Return args[0] as a bool.
         Throws if:
@@ -275,7 +300,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _not(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _not(args: list[Any], env: Environment) -> Union[int, Error]:
         """
         Return the negation of args[0].
         Throws if:
@@ -288,43 +313,29 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _and(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _and(args: list[Any], env: Environment) -> Union[int, Error]:
         """
         Return the "and" of args[0] and args[1].
         Throws if:
             - <args> does not have exactly 2 objects of type bool
         """
-        if len(args) != 2:
+        if len(args) != 1:
             return Error("AND operator requires exactly 2 operands.")
         try:
             return bool(args[0]) and bool(args[1])
         except TypeError as te:
             return Error(str(te))
 
-    def _or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def _or(args: list[Any], env: Environment) -> Union[int, Error]:
         """
         Return the "or" of args[0] and args[1].
         Throws if:
             - <args> does not have exactly 2 objects of type bool
         """
-        if len(args) != 2:
+        if len(args) != 1:
             return Error("OR operator requires exactly 2 operands.")
         try:
             return bool(args[0]) or bool(args[1])
-        except TypeError as te:
-            return Error(str(te))
-
-    def _mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
-        """
-        Return the mod of args[0] when divided by args[1].
-        Throws if:
-            - <args> does not have exactly 2 objects
-            - the object is not of type int or float
-        """
-        if len(args) != 2:
-            return Error("MOD operator requires exactly 2 operand.")
-        try:
-            return args[0] % args[1]
         except TypeError as te:
             return Error(str(te))
 
@@ -348,8 +359,7 @@ OPERATORS = \
     TokenType.TO_BOOL: (False, True, Operators._bool),
     TokenType.NOT: (False, True, Operators._not),
     TokenType.AND: (True, True, Operators._and),
-    TokenType.OR: (True, True, Operators._or),
-    TokenType.MOD: (True, True, Operators._mod)
+    TokenType.OR: (True, True, Operators._or)
 }
 
 
@@ -380,13 +390,8 @@ class Constant(Expression):
     def __init__(self, value: Any, origin: int = -1):
         Expression.__init__(self, origin)
         self.value = value
-
-
-    def __repr__(self) -> str:
-        return f"Constant<{self.value}>"
-
-
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    
+    def evaluate(self, env: Environment) -> Any:
         """
         Return the constant value held within this expression.
         <env> is ignored.
@@ -394,7 +399,7 @@ class Constant(Expression):
         No throw guarantee.
 
         >>> c = Constant('bruh')
-        >>> c.evaluate({})
+        >>> c.evaluate(Environment({}))
         'bruh'
         """
         return self.value
@@ -409,41 +414,42 @@ class Name(Expression):
         Expression.__init__(self, origin)
         self.name = name
 
-    def __repr__(self) -> str:
-        return f"Name<{self.name}>"
-
-    def assign(self, value: Any, env: dict[str, Any]) -> None:
+    def assign(self, value: Any, env: Environment) -> None:
         """
         Assign <value> to the name in env.
 
-        >>> env = {}
-        >>> n = Name("x")
-        >>> n.assign(5, env)
-        >>> n.evaluate(env)
+        >>> env = Environment({})
+        >>> name = Name('x')
+        >>> name.assign(5, env)
+        >>> name.evaluate(env)
         5
         """
-        env[self.name] = value
+        tgt_dict = env.get_dict_of(self.name)
+        if isinstance(tgt_dict, Error):
+            tgt_dict = env.local_vars
+        tgt_dict[self.name] = value
     
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    def evaluate(self, env: Environment) -> Any:
         """
         Return the value in <env> referred to by self.name.
 
         Throws if:
             - self.name is undefined.
 
-        >>> env = {}
+        >>> env = Environment({})
         >>> n = Name("x")
         >>> n.evaluate(env)
         Traceback:
-            Name 'x' not defined.
+            ---
+             Name 'x' is not defined.
         >>> n.assign(5, env)
         >>> n.evaluate(env)
         5
         """
-        if self.name not in env:
-            return Error(f"Name \'{self.name}\' not defined.", self.origin)
-        else:
-            return env[self.name]
+        val = env.get_value(self.name)
+        if isinstance(val, Error):
+            val.append("", self.origin)
+        return val
 
 
 class Operation(Expression):
@@ -464,13 +470,8 @@ class Operation(Expression):
         self.l_operand = l_operand
         self.operator = operator
         self.r_operand = r_operand
-
-
-    def __repr__(self) -> str:
-        return f"Operation<{self.l_operand}, {self.operator}, {self.r_operand}>"
     
-    
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    def evaluate(self, env: Environment) -> Any:
         """
         Evaluate required operand sides (defined by operator), and pass the
         results to the operator referred to by self.operator. Return the result
@@ -487,7 +488,7 @@ class Operation(Expression):
         4
 
         >>> op = Operation(None, TokenType.ADD, Constant(2))
-        >>> op.evaluate({})
+        >>> op.evaluate(Environment({}))
         Traceback:
             Missing left operand.
         """
@@ -535,7 +536,7 @@ class Block(Expression):
         Expression.__init__(self)
         self.steps = steps
     
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    def evaluate(self, env: Environment) -> Any:
         """
         Throws if:
             - any step fails to evaluate
@@ -544,12 +545,14 @@ class Block(Expression):
             result = step.evaluate(env)
             if isinstance(result, Error):
                 result.append("", self.origin)
-            return result
+                return result
+            elif isinstance(result, RetVal):
+                return result
 
 
 class IfBlock(Expression):
     """
-    A block of (condition, Block) pairs.
+    A branch where the execution of each Block depends on the preceding 
     """
     steps: list[tuple[Expression, Block]]
 
@@ -558,7 +561,7 @@ class IfBlock(Expression):
         Expression.__init__(self, origin)
         self.steps = steps
     
-    def evaluate(self, env: dict[str, Any]):
+    def evaluate(self, env: Environment):
         """
         """
         for step in self.steps:
@@ -566,8 +569,13 @@ class IfBlock(Expression):
             if isinstance(cond, Error):
                 cond.append("", self.origin)
                 return cond
+            if not isinstance(cond, bool):
+                try:
+                    cond = bool(cond)
+                except TypeError as te:
+                    return Error(str(te))
             if cond:
-                result = step[1].evaluate(env.copy())
+                result = step[1].evaluate(Environment({}, env))
                 if isinstance(result, Error):
                     result.append("", self.origin)
                 return result
@@ -587,7 +595,7 @@ class Function(Expression):
         self.params = params
         self.code = code
     
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    def evaluate(self, env: Environment) -> Any:
         """
         Function code is evaluated and its value is ignored, unless this value
         is an Error or RetVal. If a RetVal is encountered, execution is halted
@@ -596,12 +604,12 @@ class Function(Expression):
         Throws if:
             - function code fails to evaluate
         """
-        result = self.code.evaluate(env.copy())
+        result = self.code.evaluate(Environment({}, env))
         if isinstance(result, Error):
             result.append("", self.origin)
+            return result
         elif isinstance(result, RetVal):
             return result.evaluate(env)
-        return result
 
 
 class Invocation(Expression):
@@ -616,7 +624,7 @@ class Invocation(Expression):
         self.args = args
         self.func = func
     
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    def evaluate(self, env: Environment) -> Any:
         """
         Evaluate all expressions in self.args, and pass results to the function
         in <env> referred to by self.func. Return the result of the function.
@@ -628,9 +636,10 @@ class Invocation(Expression):
             - the number of arguments does not match the number of parameters
             required by the function
         """
-        if self.func not in env:
-            return Error(f"Function \'{self.func}\' is undefined.", self.origin)
-        func = env[self.func]
+        func = env.get_value(self.func)
+        if isinstance(func, Error):
+            func.append("", self.origin)
+            return func
         if not isinstance(func, Function):
             return Error(f"Symbol \'{self.func}\' is not a function.",
                          self.origin)
@@ -646,41 +655,41 @@ class Invocation(Expression):
             return Error(f"Function \'{self.func}\' requires exactly \
                            {len(func.params)} parameters.", self.origin)
         
-        sub_env = env.copy()
+        sub_env = Environment({}, env)
         for (i, arg) in enumerate(args):
-            sub_env[func.params[i]] = arg
+            sub_env.local_vars[func.params[i]] = arg
         
         result = func.evaluate(sub_env)
         if isinstance(result, Error):
             result.append("", self.origin)
         return result
 
-        
+# def max(x, y):
+#     if x > y:
+#         return x
+#     else:
+#         return y
+_max = Function(['x', 'y'],
+Block([
+    Operation(Constant(Name('z')), TokenType.ASSIGN, Constant(0)),
+    IfBlock(
+    [
+        (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
+            Block(
+            [
+                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x'))
+            ])),
+        (Constant(True),
+            Block(
+            [
+                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y'))
+            ])),
+    ]),
+    Operation(None, TokenType.RETURN, Name('z')),
+]))
+ivk = Invocation("max", [Constant(9), Constant(8)])
+print(ivk.evaluate(Environment({ 'max': _max })))
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
-    # def max(x, y):
-    #     if x > y:
-    #         return x
-    #     else:
-    #         return y
-    _max = Function(['x', 'y'],
-    Block([
-        IfBlock(
-        [
-            (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
-                Block(
-                [
-                    Operation(None, TokenType.RETURN, Name('x'))
-                ])),
-            (Constant(True),
-                Block(
-                [
-                    Operation(None, TokenType.RETURN, Name('y'))
-                ])),
-        ])
-    ]))
-    ivk = Invocation("max", [Constant(4), Constant(3)])
-    print(ivk.evaluate({ 'max': _max }))
