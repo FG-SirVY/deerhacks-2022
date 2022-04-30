@@ -69,6 +69,12 @@ class Environment:
         self.local_vars = local_vars
         self.parent_env = parent_env
     
+    def get_parent_vars(self) -> list[str]:
+        if self.parent_env is not None:
+            return list(self.parent_env.local_vars.keys()) \
+                + self.parent_env.get_parent_vars()
+        return []
+    
     def get_value(self, name: str) -> Any:
         if name in self.local_vars:
             return self.local_vars[name]
@@ -668,7 +674,8 @@ class Builtin(Expression):
             return Error(str(e), self.origin)
         if isinstance(result, Error):
             result.append("", self.origin)
-        return result   
+            return result
+        return RetVal(result)
 
 
 class Invocation(Expression):
@@ -723,14 +730,14 @@ class Invocation(Expression):
             result.append("", self.origin)
         return result
 
-# def fib(n: int) -> int:
-#     x, y = 0, 1
-#     while n > 0:
-#         z = x + y
-#         x = y
-#         y = z
-#         n -= 1
-#     return x
+def fib(n: int) -> int:
+    x, y = 0, 1
+    while n > 0:
+        z = x + y
+        x = y
+        y = z
+        n -= 1
+    return x
 fn_fib = Function(['n'], Block(
 [
     Operation(Constant(Name('x')), TokenType.ASSIGN, Constant(0), 2),
@@ -742,7 +749,7 @@ fn_fib = Function(['n'], Block(
 
         Operation(Constant(Name('x')), TokenType.ASSIGN, Name('y'), 5),
         Operation(Constant(Name('y')), TokenType.ASSIGN, Name('z'), 6),
-        
+
         Operation(Constant(Name('n')), TokenType.ASSIGN, 
                   Operation(Name('n'), TokenType.SUBTRACT, Constant(1)), 7),
     ]), 3),
