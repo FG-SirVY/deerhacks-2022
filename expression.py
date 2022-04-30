@@ -1,4 +1,5 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Callable
+from tokenizer import TokenType
 
 
 class Error:
@@ -33,11 +34,10 @@ def add(args: list[Union[int, float]]) -> Union[int, float, Error]:
     return float(args[0]) + float(args[1])
 
 
-# dict[str, tuple[bool, bool, Callable]]
 # [id (one char), [has left operand, has right operand, operator function]]
-OPERATORS = \
+OPERATORS: dict[str, tuple[bool, bool, Callable]] = \
 {
-    'A': (True, True, add)
+    TokenType.ADD: (True, True, add)
 }
 
 
@@ -53,7 +53,7 @@ class Expression:
     def __init__(self, origin: int = -1):
         self.origin = origin
     
-    def evaluate(self) -> Any:
+    def evaluate(self, context: dict[str, Any]) -> Any:
         raise NotImplementedError
 
 
@@ -68,8 +68,12 @@ class Constant(Expression):
     def __init__(self, value: Any, origin: int = -1):
         Expression.__init__(self, origin)
         self.value = value
+
+
+    def __repr__(self):
+        return f"Constant<c: {self.value}>"
     
-    def evaluate(self) -> Any:
+    def evaluate(self, context: dict[str, Any]) -> Any:
         """
         Return the constant value held within this expression.
         """
@@ -85,17 +89,22 @@ class Operation(Expression):
     r_operand: Expression representing the right operand.
     """
     l_operand: Optional[Expression]
-    operator: str
+    operator: TokenType
     r_operand: Optional[Expression]
 
-    def __init__(self, l_operand: Optional[Expression], operator: str,
+    def __init__(self, l_operand: Optional[Expression], operator: TokenType,
                  r_operand: Optional[Expression], origin: int = -1):
         Expression.__init__(self, origin)
         self.l_operand = l_operand
         self.operator = operator
         self.r_operand = r_operand
+
+
+    def __repr__(self):
+        return f"Operation<l: {self.l_operand}, op: {self.operator}, r: {self.r_operand}>"
+
     
-    def evaluate(self) -> Any:
+    def evaluate(self, context: dict[str, Any]) -> Any:
         if self.operator not in OPERATORS:
             error = Error()
             error.append(f"Operator {self.operator} is invalid.", self.origin)
@@ -107,7 +116,7 @@ class Operation(Expression):
                 error = Error()
                 error.append(f"Missing left operand", self.origin)
                 return error
-            value = self.l_operand.evaluate()
+            value = self.l_operand.evaluate(context)
             if isinstance(value, Error):
                 value.append("", self.origin)
                 return value
@@ -117,15 +126,15 @@ class Operation(Expression):
                 error = Error()
                 error.append(f"Missing right operand", self.origin)
                 return error
-            value = self.r_operand.evaluate()
+            value = self.r_operand.evaluate(context)
             if isinstance(value, Error):
                 value.append("", self.origin)
                 return value
             args.append(value)
         return operator[2](args)
 
-
-epic_expr = Operation(Operation(Constant(3, 0), 'A', Constant(5, 0), 0), 'A', Constant(3, 0), 0)
-# equivalent:
-# 3 + 5 + 3
-print(epic_expr.evaluate())
+if __name__ == "__main__":
+    epic_expr = Operation(Operation(Constant(3, 0), 'A', Constant(5, 0), 0), 'A', Constant(3, 0), 0)
+    # equivalent:
+    # 3 + 5 + 3
+    print(epic_expr.evaluate({}))

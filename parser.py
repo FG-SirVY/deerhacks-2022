@@ -1,154 +1,56 @@
-import enum
-from typing import Union
+from expression import Expression, Operation, Constant
+from tokenizer import Tokenizer, TokenType, Token
 
 
-ROTATING_TOKEN_COUNT = 2
-ROTATING_TOKEN_OFFSET = 8
-
-class TokenType(enum.Enum):
-    UNKNOWN = 0
-    EOF = 1
-    OPEN_PAR = 2
-    CLOSING_PAR = 3
-    NAME = 4
-    INT = 5
-    FLOAT = 6
-    STRING = 7
-    ADD = 8
-    ASSIGN = 9
-
-
-class Token:
-    token_type: TokenType
-    payload: Union[str, int]
-
-    def __init__(self, token_type: TokenType, payload: Union[str, int, float] = None):
-        self.token_type = token_type
-        self.payload = payload
-
-    def __repr__(self):
-        return f"Token<Type: {self.token_type.name}, Payload: {self.payload}>"
-
-
-class Tokenizer:
-    #TODO: Error handling
-
-    script: str
-    index: int
-    shift: int
-
+class Parser:
+    tokenizer: Tokenizer
 
     def __init__(self, script: str):
+        self.tokenizer = Tokenizer(script)
+
+    
+    def get_as_expression(self, token: Token):
+        if token.is_token_type(TokenType.FLOAT) or token.is_token_type(TokenType.INT) \
+            or token.is_token_type(TokenType.STRING):
+            return Constant(token.payload)
+
+        raise Exception(f"Cannot map token of type {token.token_type} directly to Expression")
+
+
+    def parse(self) -> Expression:
         """
-        Initialize script, index and shift
+        Parse one outer expression
+        >>> p = Parser("5 A 6")
+        >>> tree = p.parse()
+        >>> tree
+        Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Constant<c: 6>>
+        >>> tree.evaluate({})
+        11
+        >>> p = Parser("5 A 6 B 3")
+        >>> tree = p.parse()
+        >>> tree
+        Operation<l: Constant<c: 5>, op: TokenType.ADD, r: Operation<l: Constant<c: 6>, op: TokenType.ADD, r: Constant<c: 3>>>
+        >>> tree.evaluate({})
+        14
         """
-        self.script = script
-        self.index = -1
-        self.shift = 0
+        left = self.tokenizer.get_next_token()
 
+        if left.token_type == TokenType.OPEN_PAR:
+            return self.parse()
+        elif left.is_operator():
+            operator = left.token_type
+            operand = self.parse()
+            return Operation(None, operator, operand)
+        else:
+            l_operand = self.get_as_expression(left)
+            middle = self.tokenizer.get_next_token()
 
-    def get_numerical_token(self):
-        """
-        Parse a numerical token from the script.
-        
-        PRECONDITIONS:
-        The current character already is a digit.
-        """
-        start = self.index
-        self.index += 1
-
-        while self.index < len(self.script) and self.script[self.index].isdigit():
-            self.index += 1
-
-        return Token(TokenType.INT, int(self.script[start:self.index]))
-
-
-    def get_string_token(self):
-        """
-        Parse a string token from the script.
-
-        PRECONDITIONS:
-        The current character is " and the string ends somewhere.
-        """
-        start = self.index
-        self.index += 1
-
-        while self.index < len(self.script) and self.script[self.index] != "\"":
-            self.index += 1
-
-        return Token(TokenType.STRING, int(self.script[start:self.index]))
-
-
-    def get_operator_token(self):
-        """
-        Parse a jumbled operator token from the script.
-
-        PRECONDIITONS:
-        The current character is an uppercase letter corresponding to a valid operator.
-        """
-        token = Token(TokenType(ord(self.script[self.index]) - ord("A")
-            + ROTATING_TOKEN_OFFSET + self.shift))
-        
-        # Now shift the tokens
-        self.shift += 1
-        self.shift %= ROTATING_TOKEN_COUNT
-
-        return token
-
-
-    def get_name_token(self):
-        """
-        Parse a name from the script
-
-        PRECONDITIONS:
-        The current character is alpha.
-        """
-        start = self.index
-        self.index += 1
-
-        while self.index < len(self.script) and self.script[self.index].isalpha():
-            self.index += 1
-
-        return Token(TokenType.NAME, payload=self.script[start:self.index])
-
-
-    def get_next_token(self):
-        """
-        Parses the next token from the script.
-
-        >>> t = Tokenizer("b B 5")
-        >>> t.get_next_token()
-        Token<Type: NAME, Payload: b>
-        >>> t.get_next_token()
-        Token<Type: ASSIGN, Payload: None>
-        >>> t.get_next_token()
-        Token<Type: INT, Payload: 5>
-        >>> t.get_next_token()
-        Token<Type: EOF, Payload: None>
-        """
-        self.index += 1
-        while self.index < len(self.script) and self.script[self.index] == " ":
-            self.index += 1
-
-        if self.index >= len(self.script):
-            return Token(TokenType.EOF)
-
-        if self.script[self.index] == ")":
-            return Token(TokenType.OPEN_PAR)
-        if self.script[self.index] == "(":
-            return Token(TokenType.CLOSING_PAR)
-        
-        if self.script[self.index].isdigit():
-            return self.get_numerical_token()
-
-        if self.script[self.index] == "\"":
-            return self.get_string_token()
-
-        if self.script[self.index].isupper():
-            return self.get_operator_token()
-
-        if self.script[self.index].isalpha():
-            return self.get_name_token()
+            if middle.is_token_type(TokenType.CLOSING_PAR) or middle.is_token_type(TokenType.EOF):
+                return l_operand
+            elif middle.is_token_type(TokenType.ADD):
+                operator = middle.token_type
+                r_operand = self.parse()
+                return Operation(l_operand, operator, r_operand)
 
 
 if __name__ == "__main__":
