@@ -29,10 +29,17 @@ class TokenType(enum.Enum):
     MULTIPLY = 11
     DIVIDE = 12
     ASSIGN = 13
+    GREATER_THAN = 14
+    GREATER_EQUAL = 15
+    LESS_THAN = 16
+    LESS_EQUAL = 17
+    RETURN = 18
     TO_INT = 19
     TO_FLOAT = 20
     TO_BOOL = 21
     NOT = 21
+    AND = 22
+    OR = 23
 
 
     def is_operator(self):
