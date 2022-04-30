@@ -42,6 +42,10 @@ class TokenType(enum.Enum):
     OR = 24
     MOD = 25
     PRINT = 26
+    EQUAL = 27
+    LENGTH = 27
+    APPEND = 27
+    POP = 27
 
 
     def is_operator(self):
