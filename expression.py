@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 from tokenizer import TokenType
 import math
 
@@ -375,7 +375,7 @@ class Expression:
     def __init__(self, origin: int = -1):
         self.origin = origin
     
-    def evaluate(self, env: dict[str, Any]) -> Any:
+    def evaluate(self, env: Environment) -> Any:
         raise NotImplementedError
 
 
@@ -610,6 +610,33 @@ class Function(Expression):
             return result
         elif isinstance(result, RetVal):
             return result.evaluate(env)
+    
+
+class Builtin(Expression):
+    """
+    """
+    func: Callable
+    args: list[Expression]
+
+    def __init__(self, func: Callable, args: list[Expression], origin: int = -1):
+        Expression.__init__(self, origin)
+        self.func = func
+        self.args = args
+    
+    def evaluate(self, env: Environment) -> Any:
+        """
+        """
+        args = []
+        for arg in self.args:
+            arg = arg.evaluate(env)
+            if isinstance(arg, Error):
+                arg.append("", self.origin)
+                return arg
+            args.append(arg)
+        result = self.func(*args)
+        if isinstance(result, Error):
+            result.append("", self.origin)
+        return result   
 
 
 class Invocation(Expression):
@@ -677,17 +704,19 @@ Block([
         (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
             Block(
             [
-                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x'))
+                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x')),
+                Builtin(print, [Name('z')])
             ])),
         (Constant(True),
             Block(
             [
-                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y'))
+                Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y')),
+                Builtin(print, [Name('z')])
             ])),
     ]),
     Operation(None, TokenType.RETURN, Name('z')),
 ]))
-ivk = Invocation("max", [Constant(9), Constant(8)])
+ivk = Invocation("max", [Constant(1), Constant(8)])
 print(ivk.evaluate(Environment({ 'max': _max })))
 
 if __name__ == "__main__":
