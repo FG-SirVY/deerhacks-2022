@@ -45,7 +45,7 @@ def sub(args: list[Union[int, float]],
     <env> is ignored.
     """
     if len(args) != 2:
-        return Error(["ADD operator requires exactly 2 arguments."])
+        return Error(["SUB operator requires exactly 2 arguments."])
     try:
         return args[0] - args[1]
     except TypeError as te:
@@ -61,7 +61,7 @@ def mul(args: list[Union[int, float]],
     <env> is ignored.
     """
     if len(args) != 2:
-        return Error(["ADD operator requires exactly 2 arguments."])
+        return Error(["MUL operator requires exactly 2 arguments."])
     try:
         return args[0] * args[1]
     except TypeError as te:
@@ -77,7 +77,7 @@ def div(args: list[Union[int, float]],
     <env> is ignored.
     """
     if len(args) != 2:
-        return Error(["ADD operator requires exactly 2 arguments."])
+        return Error(["DIV operator requires exactly 2 arguments."])
     try:
         return args[0] / args[1]
     except TypeError as te:
