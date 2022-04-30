@@ -3,7 +3,7 @@ from typing import Union
 
 
 ROTATING_TOKEN_COUNT = 16
-ROTATING_TOKEN_OFFSET = 11
+ROTATING_TOKEN_OFFSET = 16
 
 
 class TokenType(enum.Enum):
@@ -22,26 +22,31 @@ class TokenType(enum.Enum):
     RETURN = 4
     OPEN_PAR = 5
     CLOSING_PAR = 6
-    NAME = 7
-    INT = 8
-    FLOAT = 9
-    STRING = 10
-    ADD = 11 #A
-    SUBTRACT = 12 #B
-    MULTIPLY = 13 #C
-    DIVIDE = 14 #D
-    ASSIGN = 15 #E
-    GREATER_THAN = 16 #F
-    GREATER_EQUAL = 17 #G
-    LESS_THAN = 18 #H
-    LESS_EQUAL = 19 #I
-    TO_INT = 20 #J
-    TO_FLOAT = 21 #K
-    TO_BOOL = 22 #L
-    NOT = 23 #M
-    AND = 24 #N
-    OR = 25 #O
-    MOD = 26 #P
+    OPEN_BLOCK = 7
+    CLOSING_BLOCK = 8
+    NAME = 9
+    INT = 10
+    FLOAT = 11
+    STRING = 12
+    CONDITIONAL = 13
+    FOR_LOOP = 14
+    WHILE_LOOP = 15
+    ADD = 16 #A
+    SUBTRACT = 17 #B
+    MULTIPLY = 18 #C
+    DIVIDE = 19 #D
+    ASSIGN = 20 #E
+    GREATER_THAN = 21 #F
+    GREATER_EQUAL = 22 #G
+    LESS_THAN = 23 #H
+    LESS_EQUAL = 24 #I
+    TO_INT = 25 #J
+    TO_FLOAT = 26 #K
+    TO_BOOL = 27 #L
+    NOT = 28 #M
+    AND = 29 #N
+    OR = 30 #O
+    MOD = 31 #P
 
 
     def is_operator(self):
@@ -159,6 +164,31 @@ class Tokenizer:
         self.shift %= ROTATING_TOKEN_COUNT
 
         return token
+
+
+    def _get_control_flow_token(self) -> Token:
+        """
+        Parse a control flow token, such as operator or keyword
+        """
+        start = self.index
+        self.index += 1
+
+        while self.index < len(self.script) and self.script[self.index].isupper():
+            self.index += 1
+
+        if self.index - start == 1:
+            return self._get_operator_token()
+        else:
+            keyword = self.script[start:self.index]
+
+            if keyword == "IF":
+                return Token(TokenType.CONDITIONAL)
+            elif keyword == "FOR":
+                return Token(TokenType.FOR_LOOP)
+            elif keyword == "WHILE":
+                return Token(TokenType.WHILE_LOOP)
+            else:
+                assert False
 
 
     def _get_name_token(self) -> Token:

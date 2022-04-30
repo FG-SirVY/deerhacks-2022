@@ -1,4 +1,4 @@
-from expression import Expression, Invocation, Name, Operation, Constant, Environment
+from expression import Block, Expression, IfBlock, Invocation, Name, Operation, Constant, Environment
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -78,6 +78,26 @@ class Parser:
 
         return Invocation(name.name, arguments)
 
+
+    def parse_block(self) -> Expression:
+        next_token = self.tokenizer.get_next_token()
+        assert next_token.is_token_type(TokenType.OPEN_BLOCK)
+
+        expressions = []
+        expr = self.parse_line()
+
+        while expr is not None:
+            expressions.append(expr)
+
+        return Block(expressions)
+
+
+    def parse_conditional(self) -> Expression:
+        condition = self.parse_line()
+        block = self.parse_block()
+
+        return IfBlock([(condition, block)])
+
     
     def parse_term(self, l_operand) -> Expression:
         operator = self.tokenizer.peek_next_token()
@@ -139,7 +159,11 @@ class Parser:
             return self.parse_unitary_operator()
         elif left.is_token_type(TokenType.OPEN_PAR):
             return self.parse_parentheses()
+        elif left.is_token_type(TokenType.CONDITIONAL):
+            return self.parse_conditional()
         elif left.is_token_type(TokenType.EOF) or left.is_token_type(TokenType.EOL):
+            return None
+        elif left.is_token_type(TokenType.CLOSING_BLOCK):
             return None
         else:
             l_operand = self.get_as_expression(self.tokenizer.get_next_token())
