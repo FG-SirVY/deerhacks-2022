@@ -121,28 +121,49 @@ False
 
 Exhibit A
 ```
-print{"Hellow World!"}
+print{"Hello World!"}|
+```
+Expected Output:
+```
+Hello World!
 ```
 
 Exhibit B
 ```
-print{"Hellow World!"}
-bool{"Hellow World!"}
+print{"Hello World!"}|
+bool{"Hello World!"}|
+```
+Expected Output:
+```
+Hello World!
+Hello World!
 ```
 
 Exhibit C
 ```
-name1 = "joe"
-name2 + "bill"
+name1 = "joe"|
+name2 + "bill"|
 
-int{"Hellow World! " * name1}
-float{"Hellow World! " % name2}
+int{"Hello World! " * name1}|
+float{"Hello World! " % name2}|
+```
+Expected Output:
+```
+Hello World! joe
+Hello World! bill
 ```
 
 Exhibit D
 ```
-names = ("joe", "bill", "mike", "tom")
+names = ("joe", "bill", "mike", "tom")|
 
-if i while names|
-	float{"Hellow World! "[i]}
+if i while names[
+	float{"Hello World! "[i]}]|
+```
+Expected Output:
+```
+Hello World! joe
+Hello World! bill
+Hello World! mike
+Hello World! tom
 ```
