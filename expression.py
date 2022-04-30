@@ -483,21 +483,21 @@ class Invocation(Expression):
         if isinstance(result, Error):
             result.append("", self.origin)
         return result
-
-
-fmax = Function(['x', 'y'],
-[
-    IfBlock(
-    [
-        (Operation(Name('x'), '>', Name('y')),
-            Operation(None, 'ret', Name('x'))),
-        (Constant(True),
-            Operation(None, 'ret', Name('y')))
-    ]),
-])
-ivk = Invocation("max", [Constant(5), Constant(6)])
-print(ivk.evaluate({'max': fmax}))
+        
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
+
+    fmax = Function(['x', 'y'],
+    [
+        IfBlock(
+        [
+            (Operation(Name('x'), '>', Name('y')),
+                Operation(None, 'ret', Name('x'))),
+            (Constant(True),
+                Operation(None, 'ret', Name('y')))
+        ]),
+    ])
+    ivk = Invocation("max", [Constant(5), Constant(6)])
+    print(ivk.evaluate({'max': fmax}))
