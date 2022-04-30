@@ -26,6 +26,8 @@ def run_file(fname: str, env: Environment) -> None:
     5
     >>> run_file("test-scripts/min_max_print.pain", prepare_environment())
     6
+    >>> run_file("test-scripts\complex_arithmetic_and_builtins.pain", prepare_environment())
+    432
     """
     expressions: list[Expression] = []
 
