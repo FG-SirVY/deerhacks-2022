@@ -178,8 +178,8 @@ print{1 - 1 * 2 / 3}|
 
 Exhibit F
 ```
-a = 1
-b + 2
+a = 1|
+b + 2|
 
 while a != b[
 	str{"a is less than b"}]|
