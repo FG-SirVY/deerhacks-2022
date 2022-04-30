@@ -219,7 +219,7 @@ class Operators:
             return Error("RETURN operator requires exactly 1 operand.")
         return RetVal(args[0])
     
-    def _str(args: list[Any], env: dict[str, Any]) -> Union[str, Error]:
+    def str(args: list[Any], env: dict[str, Any]) -> Union[str, Error]:
         """
         Return args[0] as a string.
         Throws if:
@@ -233,7 +233,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _int(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def int(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return args[0] as a int.
         Throws if:
@@ -247,7 +247,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _float(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def float(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return args[0] as a float.
         Throws if:
@@ -261,7 +261,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def bool(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return args[0] as a bool.
         Throws if:
@@ -275,7 +275,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _not(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def not(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the negation of args[0].
         Throws if:
@@ -288,7 +288,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _and(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def and(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the "and" of args[0] and args[1].
         Throws if:
@@ -301,7 +301,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def or(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the "or" of args[0] and args[1].
         Throws if:
@@ -314,7 +314,7 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
-    def _mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+    def mod(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
         """
         Return the mod of args[0] when divided by args[1].
         Throws if:
@@ -328,6 +328,64 @@ class Operators:
         except TypeError as te:
             return Error(str(te))
 
+    def _print(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+        """
+        Print args.
+        """
+        try:
+            print(args)
+        except TypeError as te:
+            return Error(str(te))
+
+    def _eq(args: list[Any], env: dict[str, Any]) -> bool:
+        """
+        Compare two arguments in <args> (args[0] == args[1]) and return True iff
+        args[0] == args[1].
+
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be compared
+        """
+        if len(args) != 2:
+            return Error("GEQ operator requires exactly 2 operands.")
+        try:
+            return args[0] == args[1]
+        except TypeError as te:
+            return Error(str(te))
+
+    def _len(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+        """
+        Return the length of args[0].
+        Throws if:
+            - <args> has no length
+        """
+        try:
+            return len(args[0])
+        except TypeError as te:
+            return Error(str(te))
+
+    def _append(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+        """
+        Append args[1] to args[0]
+        Throws if:
+            - <args> is not a list
+        """
+        try:
+            args[0].append(arg[1])
+        except TypeError as te:
+            return Error(str(te))
+
+    def _pop(args: list[Any], env: dict[str, Any]) -> Union[int, Error]:
+        """
+        Pop item at args[0] from args[1], and return the popped item. (Default: last)
+        Throws if:
+            - args[0] is not a list
+            - args[1] is not an int
+        """
+        try:
+            return args[0].pop(arg[1])
+        except TypeError as te:
+            return Error(str(te))
 
 # dict[str, tuple[bool, bool, Callable]]
 # [id (one char), [has left operand, has right operand, operator function]]
@@ -348,8 +406,13 @@ OPERATORS = \
     TokenType.TO_BOOL: (False, True, Operators._bool),
     TokenType.NOT: (False, True, Operators._not),
     TokenType.AND: (True, True, Operators._and),
-    TokenType.OR: (True, True, Operators._or),
+    TokenType.OR: (True, True, Operators._or)
     TokenType.MOD: (True, True, Operators._mod)
+    TokenType.PRINT: (False, True, Operators._print)
+    TokenType.EQUAL: (True, True, Operators._eq)
+    TokenType.LENGTH: (False, True, Operators._len)
+    TokenType.APPEND: (True, True, Operators._append)
+    TokenType.POP: (True, True, Operators._pop)
 }
 
 
@@ -380,12 +443,7 @@ class Constant(Expression):
     def __init__(self, value: Any, origin: int = -1):
         Expression.__init__(self, origin)
         self.value = value
-
-
-    def __repr__(self) -> str:
-        return f"Constant<{self.value}>"
-
-
+    
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
         Return the constant value held within this expression.
@@ -408,9 +466,6 @@ class Name(Expression):
     def __init__(self, name: str, origin: int = -1):
         Expression.__init__(self, origin)
         self.name = name
-
-    def __repr__(self) -> str:
-        return f"Name<{self.name}>"
 
     def assign(self, value: Any, env: dict[str, Any]) -> None:
         """
@@ -464,11 +519,6 @@ class Operation(Expression):
         self.l_operand = l_operand
         self.operator = operator
         self.r_operand = r_operand
-
-
-    def __repr__(self) -> str:
-        return f"Operation<{self.l_operand}, {self.operator}, {self.r_operand}>"
-    
     
     def evaluate(self, env: dict[str, Any]) -> Any:
         """
@@ -655,7 +705,6 @@ class Invocation(Expression):
             result.append("", self.origin)
         return result
 
-        
 
 if __name__ == "__main__":
     import doctest
