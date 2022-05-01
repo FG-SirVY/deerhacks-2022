@@ -66,9 +66,8 @@ class Parser:
             or next_token.is_token_type(TokenType.DIVIDE) \
             or next_token.is_token_type(TokenType.MOD):
             operator = self.tokenizer.get_next_token().token_type
-            right = self.tokenizer.peek_next_token()
 
-            return Operation(l_operand, operator, self.parse_parentheses())
+            return Operation(l_operand, operator, self.parse_mul_div())
         else:
             return l_operand
 
@@ -84,7 +83,7 @@ class Parser:
             or next_token.is_token_type(TokenType.SUBTRACT):
 
             operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_mul_div())
+            return Operation(l_operand, operator, self.parse_add_sub())
         else:
             return l_operand
 
@@ -137,7 +136,7 @@ class Parser:
             or next_token.is_token_type(TokenType.GREATER_THAN):
 
             operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_term())
+            return Operation(l_operand, operator, self.parse_comparison())
         else:
             return l_operand
 
@@ -151,7 +150,7 @@ class Parser:
 
         if next_token.is_token_type(TokenType.AND):
             operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_comparison())
+            return Operation(l_operand, operator, self.parse_and())
         else:
             return l_operand
 
@@ -165,7 +164,7 @@ class Parser:
 
         if next_token.is_token_type(TokenType.OR):
             operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_and())
+            return Operation(l_operand, operator, self.parse_or())
         else:
             return l_operand
 
@@ -180,7 +179,7 @@ class Parser:
         if next_token.is_token_type(TokenType.ASSIGN):
             operator = self.tokenizer.get_next_token().token_type
             assert isinstance(l_operand, Name)
-            return Operation(Constant(l_operand), operator, self.parse_or())
+            return Operation(Constant(l_operand), operator, self.parse_assignment())
         else:
             return l_operand
 
