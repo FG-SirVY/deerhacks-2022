@@ -181,6 +181,25 @@ class Operators:
             return args[0] * args[1]
         except TypeError as te:
             return Error(str(te))
+    
+    def mod(args: list[Any], env: Environment) -> Any:
+        """
+        Divide two arguments in <args> (args[0] / args[1]) and return their
+        remainder. <env> is ignored.
+
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be divided with remainder
+            - args[1] is zero
+        """
+        if len(args) != 2:
+            return Error("MOD operator requires exactly 2 operands.")
+        try:
+            return args[0] % args[1]
+        except TypeError as te:
+            return Error(str(te))
+        except ZeroDivisionError as zde:
+            return Error(str(zde))
 
     def div(args: list[Union[int, float]],
             env: Environment) -> Union[int, float, Error]:
@@ -356,6 +375,7 @@ OPERATORS = \
     TokenType.SUBTRACT: (True, True, Operators.sub),
     TokenType.MULTIPLY: (True, True, Operators.mul),
     TokenType.DIVIDE: (True, True, Operators.div),
+    TokenType.MODULO: (True, True, Operators.mod),
     TokenType.EQUAL: (True, True, Operators.eql),
     TokenType.GREATER_THAN: (True, True, Operators.grt),
     TokenType.GREATER_EQUAL: (True, True, Operators.geq),
