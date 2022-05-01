@@ -148,11 +148,13 @@ class Parser:
 
         while expr is not None:
             expressions.append(expr)
+            expr = self.parse_line()
 
         return Block(expressions)
 
 
     def parse_conditional(self) -> Expression:
+        self.tokenizer.get_next_token()
         condition = self.parse_line()
         block = self.parse_block()
 
@@ -197,6 +199,11 @@ class Parser:
         Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>
         >>> parsed.evaluate(env)
         True
+        >>> env = Environment({})
+        >>> parsed = Parser("IF 4 H 4 [test F 10]").parse_line()
+        >>> parsed
+        IfBlock<[(Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>, Block<[Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<10>>]>)]>
+        >>> parsed.evaluate(env)    
         """
         left = self.tokenizer.peek_next_token()
 

@@ -543,6 +543,9 @@ class Block(Expression):
     def __init__(self, steps: list[Expression], origin: int = -1):
         Expression.__init__(self)
         self.steps = steps
+
+    def __repr__(self) -> str:
+        return f"Block<{self.steps}>"
     
     def evaluate(self, env: Environment) -> Any:
         """
@@ -568,6 +571,9 @@ class IfBlock(Expression):
                  origin: int = -1):
         Expression.__init__(self, origin)
         self.steps = steps
+
+    def __repr__(self) -> str:
+        return f"IfBlock<{self.steps}>"
     
     def evaluate(self, env: Environment):
         """
@@ -602,6 +608,9 @@ class Function(Expression):
         Expression.__init__(self, origin)
         self.params = params
         self.code = code
+
+    def __repr__(self) -> str:
+        return f"Function<{self.params}, {self.code}>"
     
     def evaluate(self, env: Environment) -> Any:
         """

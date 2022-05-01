@@ -28,6 +28,8 @@ def run_file(fname: str, env: Environment) -> None:
     6
     >>> run_file("test-scripts\complex_arithmetic_and_builtins.pain", prepare_environment())
     432
+    >>> run_file("test-scripts\if_stmt.pain", prepare_environment())
+    10
     """
     expressions: list[Expression] = []
 

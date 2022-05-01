@@ -150,14 +150,14 @@ class Tokenizer:
         return Token(TokenType.STRING, int(self.script[start:self.index]))
 
 
-    def _get_operator_token(self) -> Token:
+    def _get_operator_token_from(self, operator_string: str) -> Token:
         """
         Parse a jumbled operator token from the script.
 
         PRECONDIITONS:
         The current character is an uppercase letter corresponding to a valid operator.
         """
-        token = Token(TokenType(ord(self.script[self.index]) - ord("A")
+        token = Token(TokenType(ord(operator_string) - ord("A")
             + ROTATING_TOKEN_OFFSET - self.shift))
         
         # Now shift the tokens
@@ -178,7 +178,7 @@ class Tokenizer:
             self.index += 1
 
         if self.index - start == 1:
-            return self._get_operator_token()
+            return self._get_operator_token_from(self.script[start])
         else:
             keyword = self.script[start:self.index]
 
@@ -244,7 +244,7 @@ class Tokenizer:
         Token<Type: INT, Payload: 6>
         >>> t.get_next_token()
         Token<Type: CLOSING_PAR, Payload: None>
-         >>> t = Tokenizer("3 C )5 B 6(")
+        >>> t = Tokenizer("3 C )5 B 6(")
         >>> t.get_next_token()
         Token<Type: INT, Payload: 3>
         >>> t.get_next_token()
@@ -257,6 +257,9 @@ class Tokenizer:
         Token<Type: ADD, Payload: None>
         >>> t.get_next_token()
         Token<Type: INT, Payload: 6>
+        >>> t = Tokenizer("IF 5 H 5 [print)6(]")
+        >>> t.get_next_token()
+        Token<Type: CONDITIONAL, Payload: None>
         """
         if self.next_token is not None:
             ret = self.next_token
@@ -278,6 +281,10 @@ class Tokenizer:
             return Token(TokenType.EOL)
         elif self.script[self.index] == ",":
             return Token(TokenType.COMMA)
+        elif self.script[self.index] == "[":
+            return Token(TokenType.OPEN_BLOCK)
+        elif self.script[self.index] == "]":
+            return Token(TokenType.CLOSING_BLOCK)
         
         if self.script[self.index].isdigit():
             return self._get_numerical_token()
@@ -286,7 +293,7 @@ class Tokenizer:
             return self._get_string_token()
 
         if self.script[self.index].isupper():
-            return self._get_operator_token()
+            return self._get_control_flow_token()
 
         if self.script[self.index].isalpha():
             return self._get_name_token()
