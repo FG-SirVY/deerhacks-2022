@@ -77,6 +77,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         run_file(sys.argv[1], prepare_environment())
     else:
-        run_file("test-scripts/if_for_while.pain", prepare_environment())
+        run_file("test-scripts-no-pain/print.nopain", prepare_environment())
         """import doctest
         doctest.testmod()"""

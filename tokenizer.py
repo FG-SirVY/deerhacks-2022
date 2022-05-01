@@ -1,5 +1,5 @@
 import enum
-from typing import Union
+from typing import Union, Optional
 
 
 ROTATING_TOKEN_COUNT = 17
@@ -163,23 +163,47 @@ class Tokenizer:
         return Token(TokenType.STRING, self.script[start:self.index])
 
 
-    def _get_operator_token_from(self, operator_string: str) -> Token:
-        """
-        Parse a jumbled operator token from the script.
+    def _get_operator_token(self) -> Optional[Token]:
+        char = self.script[self.index]
+        self.index += 1
 
-        PRECONDIITONS:
-        The current character is an uppercase letter corresponding to a valid operator.
-        """
-        token = Token(TokenType(
-            (ord(operator_string) - ord("A") - self.shift) % ROTATING_TOKEN_COUNT
-            + ROTATING_TOKEN_OFFSET
-        ))
+        if char == "+":
+            return Token(TokenType.ADD)
+        elif char == "-":
+            return Token(TokenType.SUBTRACT)
+        elif char == "*":
+            return Token(TokenType.MULTIPLY)
+        elif char == "/":
+            return Token(TokenType.DIVIDE)
+        elif char == "=":
+            if self.script[self.index] == "=":
+                self.index += 1
+                return Token(TokenType.EQUAL)
+            return Token(TokenType.ASSIGN)
+        elif char == ">":
+            if self.script[self.index] == "=":
+                self.index += 1
+                return Token(TokenType.GREATER_EQUAL)
+            return Token(TokenType.GREATER_THAN)
+        elif char == "<":
+            if self.script[self.index] == "=":
+                self.index += 1
+                return Token(TokenType.LESS_EQUAL)
+            return Token(TokenType.LESS_THAN)
+        elif char == "!":
+            return Token(TokenType.NOT)
+        elif char == "|":
+            if self.script[self.index] == "|":
+                self.index += 1
+                return Token(TokenType.OR)
+        elif char == "&":
+            if self.script[self.index] == "&":
+                self.index += 1
+                return Token(TokenType.AND)
+
+        self.index -= 1
+        return None
         
-        # Now shift the tokens
-        self.shift += 1
-        self.shift %= ROTATING_TOKEN_COUNT
-
-        return token
 
 
     def _get_control_flow_token(self) -> Token:
@@ -192,25 +216,22 @@ class Tokenizer:
         while self.index < len(self.script) and self.script[self.index].isupper():
             self.index += 1
 
-        if self.index - start == 1:
-            return self._get_operator_token_from(self.script[start])
-        else:
-            keyword = self.script[start:self.index]
+        keyword = self.script[start:self.index]
 
-            if keyword == "IF":
-                return Token(TokenType.IF)
-            elif keyword == "ELIF":
-                return Token(TokenType.ELIF)
-            elif keyword == "ELSE":
-                return Token(TokenType.ELSE)
-            elif keyword == "FOR":
-                return Token(TokenType.FOR_LOOP)
-            elif keyword == "WHILE":
-                return Token(TokenType.WHILE_LOOP)
-            elif keyword == "FUN":
-                return Token(TokenType.FUNC_DECL)
-            else:
-                assert False
+        if keyword == "IF":
+            return Token(TokenType.IF)
+        elif keyword == "ELIF":
+            return Token(TokenType.ELIF)
+        elif keyword == "ELSE":
+            return Token(TokenType.ELSE)
+        elif keyword == "FOR":
+            return Token(TokenType.FOR_LOOP)
+        elif keyword == "WHILE":
+            return Token(TokenType.WHILE_LOOP)
+        elif keyword == "FUN":
+            return Token(TokenType.FUNC_DECL)
+        else:
+            assert False
 
 
     def _get_name_token(self) -> Token:
@@ -294,17 +315,17 @@ class Tokenizer:
         if self.index >= len(self.script):
             return Token(TokenType.EOF)
 
-        if self.script[self.index] == ")":
+        if self.script[self.index] == "(":
             return Token(TokenType.OPEN_PAR)
-        elif self.script[self.index] == "(":
+        elif self.script[self.index] == ")":
             return Token(TokenType.CLOSING_PAR)
-        elif self.script[self.index] == "|":
+        elif self.script[self.index] == ";":
             return Token(TokenType.EOL)
         elif self.script[self.index] == ",":
             return Token(TokenType.COMMA)
-        elif self.script[self.index] == "[":
+        elif self.script[self.index] == "{":
             return Token(TokenType.OPEN_BLOCK)
-        elif self.script[self.index] == "]":
+        elif self.script[self.index] == "}":
             return Token(TokenType.CLOSING_BLOCK)
         
         if self.script[self.index].isdigit():
@@ -316,8 +337,12 @@ class Tokenizer:
         if self.script[self.index].isupper():
             return self._get_control_flow_token()
 
-        if self.script[self.index].isalpha():
+        operator = self._get_operator_token()
+
+        if operator is None:
             return self._get_name_token()
+        else:
+            return operator
 
 
 if __name__ == "__main__":

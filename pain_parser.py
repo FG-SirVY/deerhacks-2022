@@ -68,11 +68,7 @@ class Parser:
             operator = self.tokenizer.get_next_token().token_type
             right = self.tokenizer.peek_next_token()
 
-            if right.is_token_type(TokenType.OPEN_PAR):
-                return Operation(l_operand, operator, self.parse_parentheses())
-            else:
-                r_operand = self.get_as_expression(self.tokenizer.get_next_token())
-                return Operation(l_operand, operator, r_operand)
+            return Operation(l_operand, operator, self.parse_parentheses())
         else:
             return l_operand
 
@@ -88,49 +84,7 @@ class Parser:
             or next_token.is_token_type(TokenType.SUBTRACT):
 
             operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_line())
-        else:
-            return l_operand
-
-
-    def parse_and(self) -> Expression:
-        """
-        Parse boolean and connective.
-        """
-        l_operand = self.parse_add_sub()
-        next_token = self.tokenizer.peek_next_token()
-
-        if next_token.is_token_type(TokenType.AND):
-            operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_line())
-        else:
-            return l_operand
-
-    
-    def parse_or(self) -> Expression:
-        """
-        Parse boolean or connective.
-        """
-        l_operand = self.parse_and()
-        next_token = self.tokenizer.peek_next_token()
-
-        if next_token.is_token_type(TokenType.OR):
-            operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_line())
-        else:
-            return l_operand
-
-    
-    def parse_assignment(self) -> Expression:
-        """
-        Parse an assignment statement.
-        """
-        l_operand = self.parse_or()
-        next_token = self.tokenizer.peek_next_token()
-
-        if next_token.is_token_type(TokenType.ASSIGN):
-            operator = self.tokenizer.get_next_token().token_type
-            return Operation(Constant(l_operand), operator, self.parse_line())
+            return Operation(l_operand, operator, self.parse_mul_div())
         else:
             return l_operand
 
@@ -139,7 +93,7 @@ class Parser:
         """
         Parse a function invocation.
         """
-        l_operand = self.parse_assignment()
+        l_operand = self.parse_add_sub()
         next_token = self.tokenizer.peek_next_token()
 
         if next_token.is_token_type(TokenType.OPEN_PAR):
@@ -165,14 +119,8 @@ class Parser:
 
         if left.is_operator():
             return self.parse_unitary_operator()
-        elif left.is_token_type(TokenType.INT) \
-            or left.is_token_type(TokenType.FLOAT) \
-            or left.is_token_type(TokenType.STRING) \
-            or left.is_token_type(TokenType.OPEN_PAR) \
-            or left.is_token_type(TokenType.NAME):
-            return self.parse_invocation()
         else:
-            return None
+            return self.parse_invocation()
 
 
     def parse_comparison(self) -> Expression:
@@ -189,7 +137,50 @@ class Parser:
             or next_token.is_token_type(TokenType.GREATER_THAN):
 
             operator = self.tokenizer.get_next_token().token_type
-            return Operation(l_operand, operator, self.parse_line())
+            return Operation(l_operand, operator, self.parse_term())
+        else:
+            return l_operand
+
+    
+    def parse_and(self) -> Expression:
+        """
+        Parse boolean and connective.
+        """
+        l_operand = self.parse_comparison()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.AND):
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(l_operand, operator, self.parse_comparison())
+        else:
+            return l_operand
+
+    
+    def parse_or(self) -> Expression:
+        """
+        Parse boolean or connective.
+        """
+        l_operand = self.parse_and()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.OR):
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(l_operand, operator, self.parse_and())
+        else:
+            return l_operand
+
+    
+    def parse_assignment(self) -> Expression:
+        """
+        Parse an assignment statement.
+        """
+        l_operand = self.parse_or()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.ASSIGN):
+            operator = self.tokenizer.get_next_token().token_type
+            assert isinstance(l_operand, Name)
+            return Operation(Constant(l_operand), operator, self.parse_or())
         else:
             return l_operand
 
@@ -356,7 +347,7 @@ class Parser:
         elif not right.is_token_type(TokenType.EOF) and not right.is_token_type(TokenType.EOL) \
             and not right.is_token_type(TokenType.CLOSING_BLOCK) \
             and not right.is_token_type(TokenType.CLOSING_PAR):
-            return self.parse_comparison()
+            return self.parse_assignment()
         else:
             return None
             

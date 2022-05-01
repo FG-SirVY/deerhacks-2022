@@ -1,0 +1,7 @@
+print(5 + 4 * 10)
+
+IF 4 > 5 && 5 > 4 {
+    print("Test");
+} ELSE {
+    print("Die");
+}
