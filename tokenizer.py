@@ -126,12 +126,22 @@ class Tokenizer:
         start = self.index
         self.index += 1
 
-        while self.index < len(self.script) and self.script[self.index].isdigit():
+        is_float = False
+
+        while self.index < len(self.script):
+            if not self.script[self.index].isdigit():
+                if self.script[self.index] == "." and not is_float:
+                    is_float = True
+                else:
+                    break
             self.index += 1
 
         self.index -= 1
 
-        return Token(TokenType.INT, int(self.script[start:self.index + 1]))
+        if is_float:
+            return Token(TokenType.FLOAT, float(self.script[start:self.index + 1]))
+        else:
+            return Token(TokenType.INT, int(self.script[start:self.index + 1]))
 
 
     def _get_string_token(self) -> Token:
@@ -141,13 +151,13 @@ class Tokenizer:
         PRECONDITIONS:
         The current character is " and the string ends somewhere.
         """
-        start = self.index
+        start = self.index + 1
         self.index += 1
 
         while self.index < len(self.script) and self.script[self.index] != "\"":
             self.index += 1
 
-        return Token(TokenType.STRING, int(self.script[start:self.index]))
+        return Token(TokenType.STRING, self.script[start:self.index])
 
 
     def _get_operator_token_from(self, operator_string: str) -> Token:
