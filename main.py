@@ -23,6 +23,7 @@ def run_file(fname: str, env: Environment) -> None:
     >>> env.get_value("t")
     432
     >>> run_file("test-scripts/print.pain", prepare_environment())
+    5
     5.0
     5.0
     Test
@@ -38,11 +39,11 @@ def run_file(fname: str, env: Environment) -> None:
     >>> run_file("test-scripts/reuse_test.pain", prepare_environment())
     3
     >>> run_file("test-scripts/and.pain", prepare_environment())
-    1
-    0
+    True
+    False
     >>> run_file("test-scripts/or.pain", prepare_environment())
-    1
-    1
+    True
+    True
     >>> run_file("test-scripts/modulo.pain", prepare_environment())
     1
     >>> run_file("test-scripts/and_or.pain", prepare_environment())

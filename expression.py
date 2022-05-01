@@ -374,7 +374,7 @@ OPERATORS = \
     TokenType.SUBTRACT: (True, True, Operators.sub),
     TokenType.MULTIPLY: (True, True, Operators.mul),
     TokenType.DIVIDE: (True, True, Operators.div),
-    TokenType.MODULO: (True, True, Operators.mod),
+    TokenType.MOD: (True, True, Operators.mod),
     TokenType.EQUAL: (True, True, Operators.eql),
     TokenType.GREATER_THAN: (True, True, Operators.grt),
     TokenType.GREATER_EQUAL: (True, True, Operators.geq),
@@ -933,58 +933,59 @@ class Invocation(Expression):
             result.append("", self.origin)
         return result
 
-# garbage recursive fibonacci algorithm
-fn_fib = Function(['n'], Block(
-[
-    IfBlock(
-    [
-        (Operation(Name('n'), TokenType.LESS_EQUAL, Constant(2)), Block(
-        [
-            Operation(None, TokenType.RETURN, Constant(1))
-        ])),
-        (Constant(True), Block(
-        [
-            Operation(None, TokenType.RETURN, Operation(
-                Invocation('fib', [Operation(Name('n'), TokenType.SUBTRACT,
-                                             Constant(1))]),
-                TokenType.ADD,
-                Invocation('fib', [Operation(Name('n'), TokenType.SUBTRACT,
-                                             Constant(2))]),
-            )),
-        ])),
-    ]),
-]), 1)
-ivk = Invocation('fib', [Constant(10)], 0)
-print(ivk.evaluate(Environment({'fib': fn_fib})))
-
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
-
-    # def max(x, y):
-    #     if x > y:
-    #         return x
-    #     else:
-    #         return y
-    _max = Function(['x', 'y'],
-    Block([
-        Operation(Constant(Name('z')), TokenType.ASSIGN, Constant(0)),
+    # garbage recursive fibonacci algorithm
+    fn_fib = Function(['n'], Block(
+    [
         IfBlock(
         [
-            (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
-                Block(
-                [
-                    Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x')),
-                    Builtin(print, [Name('z')])
-                ])),
-            (Constant(True),
-                Block(
-                [
-                    Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y')),
-                    Builtin(print, [Name('z')])
-                ])),
+            (Operation(Name('n'), TokenType.LESS_EQUAL, Constant(2)), Block(
+            [
+                Operation(None, TokenType.RETURN, Constant(1))
+            ])),
+            (Constant(True), Block(
+            [
+                Operation(None, TokenType.RETURN, Operation(
+                    Invocation('fib', [Operation(Name('n'), TokenType.SUBTRACT,
+                                                Constant(1))]),
+                    TokenType.ADD,
+                    Invocation('fib', [Operation(Name('n'), TokenType.SUBTRACT,
+                                                Constant(2))]),
+                )),
+            ])),
         ]),
-        Operation(None, TokenType.RETURN, Name('z')),
-    ]))
-    ivk = Invocation("max", [Constant(1), Constant(8)])
-    print(ivk.evaluate(Environment({ 'max': _max })))
+    ]), 1)
+    ivk = Invocation('fib', [Constant(10)], 0)
+    print(ivk.evaluate(Environment({'fib': fn_fib})))
+
+    if __name__ == "__main__":
+        import doctest
+        doctest.testmod()
+
+        # def max(x, y):
+        #     if x > y:
+        #         return x
+        #     else:
+        #         return y
+        _max = Function(['x', 'y'],
+        Block([
+            Operation(Constant(Name('z')), TokenType.ASSIGN, Constant(0)),
+            IfBlock(
+            [
+                (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
+                    Block(
+                    [
+                        Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x')),
+                        Builtin(print, [Name('z')])
+                    ])),
+                (Constant(True),
+                    Block(
+                    [
+                        Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y')),
+                        Builtin(print, [Name('z')])
+                    ])),
+            ]),
+            Operation(None, TokenType.RETURN, Name('z')),
+        ]))
+        ivk = Invocation("max", [Constant(1), Constant(8)])
+        print(ivk.evaluate(Environment({ 'max': _max })))

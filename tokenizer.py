@@ -167,8 +167,10 @@ class Tokenizer:
         PRECONDIITONS:
         The current character is an uppercase letter corresponding to a valid operator.
         """
-        token = Token(TokenType(ord(operator_string) - ord("A")
-            + ROTATING_TOKEN_OFFSET - self.shift))
+        token = Token(TokenType(
+            (ord(operator_string) - ord("A") - self.shift) % ROTATING_TOKEN_COUNT
+            + ROTATING_TOKEN_OFFSET
+        ))
         
         # Now shift the tokens
         self.shift += 1

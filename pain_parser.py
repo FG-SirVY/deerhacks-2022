@@ -151,7 +151,8 @@ class Parser:
         l_operand = self.parse_term()
         next_token = self.tokenizer.peek_next_token()
 
-        if next_token.is_token_type(TokenType.LESS_EQUAL) \
+        if next_token.is_token_type(TokenType.EQUAL) \
+            or next_token.is_token_type(TokenType.LESS_EQUAL) \
             or next_token.is_token_type(TokenType.LESS_THAN) \
             or next_token.is_token_type(TokenType.GREATER_EQUAL) \
             or next_token.is_token_type(TokenType.GREATER_THAN):
@@ -251,7 +252,7 @@ class Parser:
         IfBlock<[(Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>, Block<[Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<10>>]>)]>
         >>> env = Environment({})
         >>> Parser("9 Q 4").parse_line().evaluate(env)
-        True
+        1
         >>> tree = Parser("1 P 0").parse_line()
         >>> tree
         Operation<Constant<1>, TokenType.OR, Constant<0>>
