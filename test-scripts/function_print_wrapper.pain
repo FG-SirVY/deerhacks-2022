@@ -1,5 +1,5 @@
-customPrint F FUN test [
-    print) test C "Print" (|
+customPrint E FUN test [
+    print) test B "Print" (|
 ]
 
 customPrint) "Custom " (|
