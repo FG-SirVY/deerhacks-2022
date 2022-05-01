@@ -559,7 +559,8 @@ class Operation(Expression):
 
 
 class RetVal(Constant):
-    pass
+    def __repr__(self) -> str:
+        return f"RetVal<{self.value}>"
 
 
 class Block(Expression):

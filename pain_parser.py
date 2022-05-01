@@ -1,4 +1,4 @@
-from expression import Block, Expression, Function, IfBlock, Invocation, Name, Operation, Constant, Environment, ForLoop, WhileLoop
+from expression import Block, Expression, Function, IfBlock, Invocation, Name, Operation, Constant, Environment, ForLoop, RetVal, WhileLoop
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -39,6 +39,15 @@ class Parser:
         return Operation(None, operator, self.parse_line())
 
 
+    def parse_return(self) -> Expression:
+        """
+        """
+        operator = self.tokenizer.get_next_token().token_type
+        assert operator == TokenType.RETURN
+
+        return Operation(None, operator, self.parse_or())
+
+
     def parse_parentheses(self) -> Expression:
         """
         Parse a set of parentheses (Highest priority),
@@ -54,12 +63,34 @@ class Parser:
         else:
             return self.get_as_expression(self.tokenizer.get_next_token())
 
+    
+    def parse_invocation(self) -> Expression:
+        """
+        Parse a function invocation.
+        """
+        l_operand = self.parse_parentheses()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.OPEN_PAR):
+            self.tokenizer.get_next_token()
+            arguments = []
+            next_operator = TokenType.COMMA
+            while next_operator == TokenType.COMMA:
+                arguments.append(self.parse_line())
+                next_operator = self.tokenizer.get_next_token().token_type
+
+            assert next_operator == TokenType.CLOSING_PAR
+
+            return Invocation(l_operand.name, arguments)
+        else:
+            return l_operand
+
 
     def parse_mul_div(self) -> Expression:
         """
         Parse multiplication, division or modulo arithmetic.
         """
-        l_operand = self.parse_parentheses()
+        l_operand = self.parse_invocation()
         next_token = self.tokenizer.peek_next_token()
 
         if next_token.is_token_type(TokenType.MULTIPLY) \
@@ -87,28 +118,6 @@ class Parser:
         else:
             return l_operand
 
-
-    def parse_invocation(self) -> Expression:
-        """
-        Parse a function invocation.
-        """
-        l_operand = self.parse_add_sub()
-        next_token = self.tokenizer.peek_next_token()
-
-        if next_token.is_token_type(TokenType.OPEN_PAR):
-            self.tokenizer.get_next_token()
-            arguments = []
-            next_operator = TokenType.COMMA
-            while next_operator == TokenType.COMMA:
-                arguments.append(self.parse_line())
-                next_operator = self.tokenizer.get_next_token().token_type
-
-            assert next_operator == TokenType.CLOSING_PAR
-
-            return Invocation(l_operand.name, arguments)
-        else:
-            return l_operand
-
     
     def parse_term(self) -> Expression:
         """
@@ -118,8 +127,10 @@ class Parser:
 
         if left.is_operator():
             return self.parse_unitary_operator()
+        elif left.is_token_type(TokenType.RETURN):
+            return self.parse_return()
         else:
-            return self.parse_invocation()
+            return self.parse_add_sub()
 
 
     def parse_comparison(self) -> Expression:
@@ -198,7 +209,8 @@ class Parser:
             expressions.append(expr)
             expr = self.parse_line()
 
-        assert self.tokenizer.get_next_token().is_token_type(TokenType.CLOSING_BLOCK)
+        next_token = self.tokenizer.get_next_token()
+        assert next_token.is_token_type(TokenType.CLOSING_BLOCK)
 
         return Block(expressions)
 
@@ -213,11 +225,11 @@ class Parser:
         branches = [(condition, block)]
         
         right = self.tokenizer.peek_next_token()
-        while right.is_token_type(TokenType.EOL) \
+        """while right.is_token_type(TokenType.EOL) \
             or right.is_token_type(TokenType.CLOSING_BLOCK):
             self.tokenizer.get_next_token()
             right = self.tokenizer.peek_next_token()
-        
+        """
         if has_cond:
             if right.is_token_type(TokenType.ELIF):
                 branches += self.parse_conditional(True).steps

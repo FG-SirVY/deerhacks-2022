@@ -209,6 +209,8 @@ class Tokenizer:
                 return Token(TokenType.WHILE_LOOP)
             elif keyword == "FUN":
                 return Token(TokenType.FUNC_DECL)
+            elif keyword == "RET":
+                return Token(TokenType.RETURN)
             else:
                 assert False
 

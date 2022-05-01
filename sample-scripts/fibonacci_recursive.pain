@@ -1,9 +1,9 @@
 fib E FUN n [
-    If n K 2 [
+    IF n K 2 [
         RET 1|
     ] ELSE [
-        RET fib)n C 1( + fib)n D 2(|
+        RET fib)n D 1( D fib)n F 2(|
     ]
 ]
 
-fib)3(|
+print)fib)10((|
