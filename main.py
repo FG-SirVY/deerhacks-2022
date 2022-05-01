@@ -34,6 +34,11 @@ def run_file(fname: str, env: Environment) -> None:
     >>> run_file("test-scripts/more_tests.pain", prepare_environment())
     print
     a is less than b
+    >>> env = Environment({})
+    >>> run_file("test-scripts/reuse_test.pain", env)
+    3
+    >>> env.get_value("a")
+    3
     """
     expressions: list[Expression] = []
 
