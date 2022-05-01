@@ -203,7 +203,6 @@ class Parser:
         >>> parsed = Parser("IF 4 H 4 [test F 10]").parse_line()
         >>> parsed
         IfBlock<[(Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>, Block<[Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<10>>]>)]>
-        >>> parsed.evaluate(env)    
         """
         left = self.tokenizer.peek_next_token()
 

@@ -24,14 +24,15 @@ def run_file(fname: str, env: Environment) -> None:
     432
     >>> run_file("test-scripts/print.pain", prepare_environment())
     5
+    5.0
+    5.0
+    Test
     >>> run_file("test-scripts/min_max_print.pain", prepare_environment())
     6
     >>> run_file("test-scripts\complex_arithmetic_and_builtins.pain", prepare_environment())
     432
     >>> run_file("test-scripts\if_stmt.pain", prepare_environment())
     10
-    >>> run_file("test-scripts\print_string.pain", prepare_environment())
-    Te st
     """
     expressions: list[Expression] = []
 
