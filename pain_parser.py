@@ -1,4 +1,4 @@
-from expression import Block, Expression, IfBlock, Invocation, Name, Operation, Constant, Environment, ForLoop, WhileLoop
+from expression import Block, Expression, Function, IfBlock, Invocation, Name, Operation, Constant, Environment, ForLoop, WhileLoop
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -32,11 +32,18 @@ class Parser:
 
 
     def parse_unitary_operator(self) -> Expression:
+        """
+        Parse an operator which only has one operand to the right of it.
+        """
         operator = self.tokenizer.get_next_token().token_type
         return Operation(None, operator, self.parse_line())
 
 
     def parse_parentheses(self) -> Expression:
+        """
+        Parse a set of parentheses (Highest priority),
+        or just return the value if there are no parentheses.
+        """
         next_token = self.tokenizer.peek_next_token()
 
         if next_token.is_token_type(TokenType.OPEN_PAR):
@@ -49,6 +56,9 @@ class Parser:
 
 
     def parse_mul_div(self) -> Expression:
+        """
+        Parse multiplication, division or modulo arithmetic.
+        """
         l_operand = self.parse_parentheses()
         next_token = self.tokenizer.peek_next_token()
 
@@ -68,6 +78,9 @@ class Parser:
 
 
     def parse_add_sub(self) -> Expression:
+        """
+        Parse addition or subtraction.
+        """
         l_operand = self.parse_mul_div()
         next_token = self.tokenizer.peek_next_token()
         
@@ -81,6 +94,9 @@ class Parser:
 
 
     def parse_and(self) -> Expression:
+        """
+        Parse boolean and connective.
+        """
         l_operand = self.parse_add_sub()
         next_token = self.tokenizer.peek_next_token()
 
@@ -91,7 +107,10 @@ class Parser:
             return l_operand
 
     
-    def parse_or(self):
+    def parse_or(self) -> Expression:
+        """
+        Parse boolean or connective.
+        """
         l_operand = self.parse_and()
         next_token = self.tokenizer.peek_next_token()
 
@@ -103,6 +122,9 @@ class Parser:
 
     
     def parse_assignment(self) -> Expression:
+        """
+        Parse an assignment statement.
+        """
         l_operand = self.parse_or()
         next_token = self.tokenizer.peek_next_token()
 
@@ -114,6 +136,9 @@ class Parser:
 
 
     def parse_invocation(self) -> Expression:
+        """
+        Parse a function invocation.
+        """
         l_operand = self.parse_assignment()
         next_token = self.tokenizer.peek_next_token()
 
@@ -133,6 +158,9 @@ class Parser:
 
     
     def parse_term(self) -> Expression:
+        """
+        Decide whether to parse with a unitary operator or a binary one.
+        """
         left = self.tokenizer.peek_next_token()
 
         if left.is_operator():
@@ -148,6 +176,9 @@ class Parser:
 
 
     def parse_comparison(self) -> Expression:
+        """
+        Parse a binary comparison.
+        """
         l_operand = self.parse_term()
         next_token = self.tokenizer.peek_next_token()
 
@@ -164,6 +195,9 @@ class Parser:
 
 
     def parse_block(self) -> Expression:
+        """
+        Parse a block statement (which will have its own environment).
+        """
         next_token = self.tokenizer.get_next_token()
         assert next_token.is_token_type(TokenType.OPEN_BLOCK)
 
@@ -174,10 +208,15 @@ class Parser:
             expressions.append(expr)
             expr = self.parse_line()
 
+        assert self.tokenizer.get_next_token().is_token_type(TokenType.CLOSING_BLOCK)
+
         return Block(expressions)
 
 
     def parse_conditional(self) -> Expression:
+        """
+        Parse an "if" conditional statement.
+        """
         self.tokenizer.get_next_token()
         condition = self.parse_line()
         block = self.parse_block()
@@ -186,6 +225,9 @@ class Parser:
     
 
     def parse_while_loop(self) -> Expression:
+        """
+        Parse a while loop.
+        """
         self.tokenizer.get_next_token()
         condition = self.parse_line()
         block = self.parse_block()
@@ -193,6 +235,9 @@ class Parser:
 
 
     def parse_for_loop(self) -> Expression:
+        """
+        Parse an ordinary for loop.
+        """
         self.tokenizer.get_next_token()
         next_token = self.tokenizer.get_next_token()
         assert next_token.is_token_type(TokenType.OPEN_BLOCK)
@@ -206,6 +251,23 @@ class Parser:
 
         block = self.parse_block()
         return ForLoop(cond_exprs[0], cond_exprs[1], cond_exprs[2], block)
+
+
+    def parse_function_declaration(self) -> Expression:
+        """
+        Parse the declaration of a function.
+        """
+        self.tokenizer.get_next_token()
+
+        params = []
+        while self.tokenizer.peek_next_token().token_type != TokenType.OPEN_BLOCK:
+            name = self.tokenizer.get_next_token()
+            assert name.is_token_type(TokenType.NAME)
+            params.append(name.payload)
+
+        block = self.parse_block()
+
+        return Constant(Function(params, block))
 
 
     def parse_line(self) -> Expression:
@@ -258,11 +320,13 @@ class Parser:
         Operation<Constant<1>, TokenType.OR, Constant<0>>
         >>> tree.evaluate(env)
         True
+        >>> tree = Parser("FUN a [a A 10]").parse_line()
+        >>> tree
+        Function<['a'], Block<[Operation<Name<a>, TokenType.ADD, Constant<10>>]>>
         """
         right = self.tokenizer.peek_next_token()
 
-        while right.is_token_type(TokenType.EOL) \
-            or right.is_token_type(TokenType.CLOSING_BLOCK):
+        while right.is_token_type(TokenType.EOL):
             self.tokenizer.get_next_token()
             right = self.tokenizer.peek_next_token()
 
@@ -272,6 +336,8 @@ class Parser:
             return self.parse_while_loop()
         elif right.is_token_type(TokenType.FOR_LOOP):
             return self.parse_for_loop()
+        elif right.is_token_type(TokenType.FUNC_DECL):
+            return self.parse_function_declaration()
         elif not right.is_token_type(TokenType.EOF) and not right.is_token_type(TokenType.EOL) \
             and not right.is_token_type(TokenType.CLOSING_BLOCK) \
             and not right.is_token_type(TokenType.CLOSING_PAR):

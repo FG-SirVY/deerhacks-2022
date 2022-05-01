@@ -3,7 +3,7 @@ from typing import Union
 
 
 ROTATING_TOKEN_COUNT = 17
-ROTATING_TOKEN_OFFSET = 16
+ROTATING_TOKEN_OFFSET = 17
 
 
 class TokenType(enum.Enum):
@@ -31,23 +31,24 @@ class TokenType(enum.Enum):
     CONDITIONAL = 13
     FOR_LOOP = 14
     WHILE_LOOP = 15
-    ADD = 16 #A
-    SUBTRACT = 17 #B
-    MULTIPLY = 18 #C
-    DIVIDE = 19 #D
-    ASSIGN = 20 #E
-    EQUAL = 21 #F
-    GREATER_THAN = 22 #G
-    GREATER_EQUAL = 23 #H
-    LESS_THAN = 24 #I
-    LESS_EQUAL = 25 #J
-    TO_INT = 26 #K
-    TO_FLOAT = 27 #L
-    TO_BOOL = 28 #M
-    NOT = 29 #N
-    AND = 30 #O
-    OR = 31 #P
-    MOD = 32 #Q
+    FUNC_DECL = 16
+    ADD = 17 #A
+    SUBTRACT = 18 #B
+    MULTIPLY = 19 #C
+    DIVIDE = 20 #D
+    ASSIGN = 21 #E
+    EQUAL = 22 #F
+    GREATER_THAN = 23 #G
+    GREATER_EQUAL = 24 #H
+    LESS_THAN = 25 #I
+    LESS_EQUAL = 26 #J
+    TO_INT = 27 #K
+    TO_FLOAT = 28 #L
+    TO_BOOL = 29 #M
+    NOT = 30 #N
+    AND = 31 #O
+    OR = 32 #P
+    MOD = 33 #Q
 
 
     def is_operator(self):
@@ -200,6 +201,8 @@ class Tokenizer:
                 return Token(TokenType.FOR_LOOP)
             elif keyword == "WHILE":
                 return Token(TokenType.WHILE_LOOP)
+            elif keyword == "FUN":
+                return Token(TokenType.FUNC_DECL)
             else:
                 assert False
 

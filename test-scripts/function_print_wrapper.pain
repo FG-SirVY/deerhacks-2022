@@ -1,0 +1,5 @@
+customPrint F FUN test [
+    print) test C "Print" (|
+]
+
+customPrint) "Custom " (|

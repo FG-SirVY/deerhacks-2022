@@ -957,35 +957,43 @@ if __name__ == "__main__":
     ]), 1)
     ivk = Invocation('fib', [Constant(10)], 0)
     print(ivk.evaluate(Environment({'fib': fn_fib})))
+    
+    import doctest
+    doctest.testmod()
 
-    if __name__ == "__main__":
-        import doctest
-        doctest.testmod()
+    # def max(x, y):
+    #     if x > y:
+    #         return x
+    #     else:
+    #         return y
+    _max = Function(['x', 'y'],
+    Block([
+        Operation(Constant(Name('z')), TokenType.ASSIGN, Constant(0)),
+        IfBlock(
+        [
+            (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
+                Block(
+                [
+                    Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x')),
+                    Builtin(print, [Name('z')])
+                ])),
+            (Constant(True),
+                Block(
+                [
+                    Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y')),
+                    Builtin(print, [Name('z')])
+                ])),
+        ]),
+        Operation(None, TokenType.RETURN, Name('z')),
+    ]))
+    ivk = Invocation("max", [Constant(1), Constant(8)])
+    print(ivk.evaluate(Environment({ 'max': _max })))
 
-        # def max(x, y):
-        #     if x > y:
-        #         return x
-        #     else:
-        #         return y
-        _max = Function(['x', 'y'],
-        Block([
-            Operation(Constant(Name('z')), TokenType.ASSIGN, Constant(0)),
-            IfBlock(
-            [
-                (Operation(Name('x'), TokenType.GREATER_THAN, Name('y')), 
-                    Block(
-                    [
-                        Operation(Constant(Name('z')), TokenType.ASSIGN, Name('x')),
-                        Builtin(print, [Name('z')])
-                    ])),
-                (Constant(True),
-                    Block(
-                    [
-                        Operation(Constant(Name('z')), TokenType.ASSIGN, Name('y')),
-                        Builtin(print, [Name('z')])
-                    ])),
-            ]),
-            Operation(None, TokenType.RETURN, Name('z')),
-        ]))
-        ivk = Invocation("max", [Constant(1), Constant(8)])
-        print(ivk.evaluate(Environment({ 'max': _max })))
+    fn_customPrint = Function(["a"], Block([
+        Invocation("print", [Operation(Constant("Custom "), TokenType.ADD, Name("a"))])
+    ]))
+    fn_print = Function(["x"], Builtin(print, [Name("x")]))
+
+    ivk = Invocation("customPrint", [Constant("Print")])
+    print(ivk.evaluate(Environment({ "customPrint": fn_customPrint, "print": fn_print})))
+

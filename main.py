@@ -14,6 +14,8 @@ def prepare_environment() -> Environment:
 
 def run_file(fname: str, env: Environment) -> None:
     """
+    >>> run_file("test-scripts/function_print_wrapper.pain", prepare_environment())
+    Custom Print
     >>> env = Environment({})
     >>> run_file("test-scripts/simple_arithmetic.pain", env)
     >>> env.get_value("test")
@@ -65,6 +67,7 @@ def run_file(fname: str, env: Environment) -> None:
                 break
 
     for e in expressions:
+        #print(e)
         e.evaluate(env)
 
 
