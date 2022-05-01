@@ -31,24 +31,33 @@ class Error:
         >>> e
         Traceback:
             Line 3
-             ---
-              Line 1
-               Line 0
-                Ammo Gus
+             Line 1
+              Line 0
+               Ammo Gus
         """
         out = ["Traceback:"]
+        indent = 4
         for i in range(1, len(self.traceback) + 1):
             msg = self.traceback[-i]
-            if len(msg) == 0:
-                out.append(f"{' ' * (i + 3)}---")
-            else:
-                out.append(f"{' ' * (i + 3)}{msg}")
+            if len(msg) != 0:
+                out.append(f"{' ' * indent}{msg}")
+                indent += 1
         return '\n'.join(out)
 
     def append(self, message: str, origin: int = -1):
         """
         Append an error to the traceback. If origin >= 0, include a line
         indicator at the start of the message.
+
+        >>> e = Error()
+        >>> e.append("hi", 0)
+        >>> e.append("", 1)
+        >>> e.append("yo", -1)
+        >>> e
+        Traceback:
+            yo
+             Line 1
+              Line 0: hi
         """
         if origin < 0:
             self.traceback.append(message)
@@ -61,6 +70,8 @@ class Error:
 
 class Environment:
     """
+    Environment that holds local named variables, and an optional reference to
+    a parent environment.
     """
     parent_env: 'Environment'
     local_vars: dict[str, Any]
@@ -69,13 +80,27 @@ class Environment:
         self.local_vars = local_vars
         self.parent_env = parent_env
     
-    def get_parent_vars(self) -> list[str]:
-        if self.parent_env is not None:
-            return list(self.parent_env.local_vars.keys()) \
-                + self.parent_env.get_parent_vars()
-        return []
-    
     def get_value(self, name: str) -> Any:
+        """
+        Searches for <name> in <local_vars>. If not found, it then searches
+        the parent environment recursively.
+        If <name> is located somewhere, its associated value is returned.
+
+        Throws if:
+            - <name> is undefined in both local_vars and parent_env
+        
+        >>> env1 = Environment({'a': 1, 'b': 2})
+        >>> env2 = Environment({'c': 3}, env1)
+        >>> env1.get_value('a')
+        1
+        >>> env2.get_value('a')
+        1
+        >>> env2.get_value('c')
+        3
+        >>> env1.get_value('c')
+        Traceback:
+            Name 'c' is not defined.
+        """
         if name in self.local_vars:
             return self.local_vars[name]
         elif self.parent_env is not None:
@@ -83,6 +108,23 @@ class Environment:
         return Error(f"Name \'{name}\' is not defined.")
     
     def get_dict_of(self, name: str) -> dict[str, Any]:
+        """
+        Searches for <name> in <local_vars>. If not found, it then searches
+        the parent environment recursively.
+        If <name> is located somewhere, its containing dictionary is returned.
+
+        >>> env1 = Environment({'a': 1, 'b': 2})
+        >>> env2 = Environment({'c': 3}, env1)
+        >>> env1.get_dict_of('a')
+        {'a': 1, 'b': 2}
+        >>> env2.get_dict_of('a')
+        {'a': 1, 'b': 2}
+        >>> env2.get_dict_of('c')
+        {'c': 3}
+        >>> env1.get_dict_of('c')
+        Traceback:
+            Name 'c' is not defined.
+        """
         if name in self.local_vars:
             return self.local_vars
         elif self.parent_env is not None:
@@ -159,6 +201,22 @@ class Operators:
             return Error(str(te))
         except ZeroDivisionError as zde:
             return Error(str(zde))
+    
+    def eql(args: list[Any], env: Environment) -> bool:
+        """
+        Compare two arguments in <args> (args[0] == args[1]) and return True iff
+        args[0] == args[1]. <env> is ignored.
+
+        Throws if:
+            - <args> does not have exactly 2 objects
+            - objects in <args> may not be compared
+        """
+        if len(args) != 2:
+            return Error("EQL operator requires exactly 2 operands.")
+        try:
+            return args[0] == args[1]
+        except TypeError as te:
+            return Error(str(te))
 
     def grt(args: list[Any], env: Environment) -> bool:
         """
@@ -249,62 +307,6 @@ class Operators:
         if len(args) != 1:
             return Error("RETURN operator requires exactly 1 operand.")
         return RetVal(args[0])
-    
-    def _str(args: list[Any], env: Environment) -> Union[str, Error]:
-        """
-        Return args[0] as a string.
-        Throws if:
-            - <args> does not have exactly 1 object
-            - the object is not convertible to int
-        """
-        if len(args) != 1:
-            return Error("STR operator requires exactly 1 operand.")
-        try:
-            return str(args[0])
-        except TypeError as te:
-            return Error(str(te))
-
-    def _int(args: list[Any], env: Environment) -> Union[int, Error]:
-        """
-        Return args[0] as a int.
-        Throws if:
-            - <args> does not have exactly 1 object
-            - the object is not convertible to int
-        """
-        if len(args) != 1:
-            return Error("INT operator requires exactly 1 operand.")
-        try:
-            return int(args[0])
-        except TypeError as te:
-            return Error(str(te))
-
-    def _float(args: list[Any], env: Environment) -> Union[int, Error]:
-        """
-        Return args[0] as a float.
-        Throws if:
-            - <args> does not have exactly 1 object
-            - the object is not convertible to float
-        """
-        if len(args) != 1:
-            return Error("FLOAT operator requires exactly 1 operand.")
-        try:
-            return float(args[0])
-        except TypeError as te:
-            return Error(str(te))
-
-    def _bool(args: list[Any], env: Environment) -> Union[int, Error]:
-        """
-        Return args[0] as a bool.
-        Throws if:
-            - <args> does not have exactly 1 object
-            - the object is not convertible to bool
-        """
-        if len(args) != 1:
-            return Error("BOOL operator requires exactly 1 operand.")
-        try:
-            return bool(args[0])
-        except TypeError as te:
-            return Error(str(te))
 
     def _not(args: list[Any], env: Environment) -> Union[int, Error]:
         """
@@ -354,15 +356,13 @@ OPERATORS = \
     TokenType.SUBTRACT: (True, True, Operators.sub),
     TokenType.MULTIPLY: (True, True, Operators.mul),
     TokenType.DIVIDE: (True, True, Operators.div),
+    TokenType.EQUAL: (True, True, Operators.eql),
     TokenType.GREATER_THAN: (True, True, Operators.grt),
     TokenType.GREATER_EQUAL: (True, True, Operators.geq),
     TokenType.LESS_THAN: (True, True, Operators.les),
     TokenType.LESS_EQUAL: (True, True, Operators.leq),
     TokenType.ASSIGN: (True, True, Operators.ass),
     TokenType.RETURN: (False, True, Operators.ret),
-    TokenType.TO_INT: (False, True, Operators._int),
-    TokenType.TO_FLOAT: (False, True, Operators._float),
-    TokenType.TO_BOOL: (False, True, Operators._bool),
     TokenType.NOT: (False, True, Operators._not),
     TokenType.AND: (True, True, Operators._and),
     TokenType.OR: (True, True, Operators._or)
@@ -449,8 +449,7 @@ class Name(Expression):
         >>> n = Name("x")
         >>> n.evaluate(env)
         Traceback:
-            ---
-             Name 'x' is not defined.
+            Name 'x' is not defined.
         >>> n.assign(5, env)
         >>> n.evaluate(env)
         5
@@ -575,7 +574,7 @@ class Block(Expression):
 
 class IfBlock(Expression):
     """
-    A branch where the execution of each block is contingent on its associated
+    A branch where the execution of each block is dependent on its associated
     expression evaluating to True. If it is False, the next condition is
     checked.
     """
@@ -588,6 +587,37 @@ class IfBlock(Expression):
     
     def evaluate(self, env: Environment):
         """
+        Evaluate condition for first step, and continue if the condition is
+        False until a condition evaluates to True, or until the end is reached.
+
+        Throws if:
+            - a condition fails to evaluate
+            - a condition evaluates to a non bool type, and the type cannot be
+                converted to a bool
+            - a block fails to evaluate
+        
+        >>> blk = \
+        IfBlock( \
+        [ \
+            (Operation(Name('x'), TokenType.GREATER_THAN, Constant(3)), \
+                Operation(Constant(Name('x')), TokenType.ASSIGN, Constant(1))),\
+            (Operation(Name('x'), TokenType.GREATER_THAN, Constant(2)), \
+                Operation(Constant(Name('x')), TokenType.ASSIGN, Constant(2))),\
+            (Constant(True), \
+                Operation(Constant(Name('x')), TokenType.ASSIGN, Constant(3))) \
+        ])
+        >>> env = Environment({'x': 4})
+        >>> blk.evaluate(env)
+        >>> env.get_value('x')
+        1
+        >>> env = Environment({'x': 3})
+        >>> blk.evaluate(env)
+        >>> env.get_value('x')
+        2
+        >>> env = Environment({'x': 2})
+        >>> blk.evaluate(env)
+        >>> env.get_value('x')
+        3
         """
         for step in self.steps:
             cond = step[0].evaluate(env)
@@ -608,6 +638,11 @@ class IfBlock(Expression):
 
 class WhileLoop(Expression):
     """
+    A loop that executes a code block as long as its condition evaluates to
+    True.
+
+    cond: the condition that continues loop execution
+    code: the code block to be executed
     """
     cond: Expression
     code: Block
@@ -619,6 +654,27 @@ class WhileLoop(Expression):
     
     def evaluate(self, env: Environment):
         """
+        If <cond> evaluates to True, execute <code> and repeat until <cond>
+        evaluates to False.
+
+        Throws if:
+            - the condition fails to evaluate
+            - the code block fails to execute
+        
+        >>> b_print = Function(['x'], Block([Builtin(print, [Name('x')])]))
+        >>> loop = \
+        WhileLoop(Operation(Name('n'), TokenType.GREATER_THAN, Constant(0)), \
+        Block([ \
+            Invocation('b_print', [Name('n')]), \
+            Operation(Constant(Name('n')), TokenType.ASSIGN, \
+                      Operation(Name('n'), TokenType.SUBTRACT, Constant(1))) \
+        ]))
+        >>> loop.evaluate(Environment({'n': 5, 'b_print': b_print}))
+        5
+        4
+        3
+        2
+        1
         """
         while True:
             cond = self.cond.evaluate(env)
@@ -637,6 +693,14 @@ class WhileLoop(Expression):
 
 class ForLoop(Expression):
     """
+    This loop only executes as long as the condition evaluated before loop
+    execution is True.
+
+    first: the expression evaluated before the loop begins
+    cond: the expression evaluated before each loop iteration, and that must
+        evaluate to True in order for the loop to iterate
+    on_rpt: the expression evaluated after each loop iteration
+    code: the code block executed each iteration
     """
     first: Expression
     cond: Expression
@@ -653,6 +717,36 @@ class ForLoop(Expression):
 
     def evaluate(self, env: Environment) -> Any:
         """
+        Execute self.first.
+        Execute self.cond. If self.cond evaluates to True, execute self.code.
+        Then, execute self.on_rpt. Repeat from 2nd line until self.cond is
+        False.
+
+        Throws if:
+            - self.first fails to evaluate
+            - self.cond fails to evaluate
+            - self.cond evaluates to a non bool type, and the type cannot be
+                converted to a bool
+            - self.on_rpt fails to evaluate
+            - self.code fails to evaluate
+        
+        >>> b_print = Function(['x'], Block([Builtin(print, [Name('x')])]))
+        >>> l = \
+        ForLoop(Operation(Constant(Name('i')), TokenType.ASSIGN, \
+                          Constant(0)), \
+                Operation(Name('i'), TokenType.LESS_THAN, \
+                          Constant(5)), \
+                Operation(Constant(Name('i')), TokenType.ASSIGN, \
+                          Operation(Name('i'), TokenType.ADD, Constant(1))), \
+                Block([ \
+                    Invocation('b_print', [Name('i')]) \
+                ]))
+        >>> l.evaluate(Environment({'b_print': b_print}))
+        0
+        1
+        2
+        3
+        4
         """
         loop_env = Environment({}, env)
         result = self.first.evaluate(loop_env)
@@ -670,7 +764,7 @@ class ForLoop(Expression):
             if not cond:
                 break
 
-            result = self.code.evaluate(Environment({}, env))
+            result = self.code.evaluate(loop_env)
             if isinstance(result, Error):
                 result.append("", self.origin)
                 return result
@@ -749,7 +843,7 @@ class Builtin(Expression):
 
 class Invocation(Expression):
     """
-            functio
+    
     """
     func: str
     args: list[Expression]
@@ -798,6 +892,30 @@ class Invocation(Expression):
         if isinstance(result, Error):
             result.append("", self.origin)
         return result
+
+# garbage recursive fibonacci algorithm
+fn_fib = Function(['n'], Block(
+[
+    IfBlock(
+    [
+        (Operation(Name('n'), TokenType.LESS_EQUAL, Constant(2)), Block(
+        [
+            Operation(None, TokenType.RETURN, Constant(1))
+        ])),
+        (Constant(True), Block(
+        [
+            Operation(None, TokenType.RETURN, Operation(
+                Invocation('fib', [Operation(Name('n'), TokenType.SUBTRACT,
+                                             Constant(1))]),
+                TokenType.ADD,
+                Invocation('fib', [Operation(Name('n'), TokenType.SUBTRACT,
+                                             Constant(2))]),
+            )),
+        ])),
+    ]),
+]), 1)
+ivk = Invocation('fib', [Constant(10)], 0)
+print(ivk.evaluate(Environment({'fib': fn_fib})))
 
 if __name__ == "__main__":
     import doctest
