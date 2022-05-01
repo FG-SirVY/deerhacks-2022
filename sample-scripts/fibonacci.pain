@@ -1,4 +1,9 @@
+# Determine the nth Fibonacci number more efficiently
+
 fib E FUN n [
+    # Determine nth Fibonacci number
+    # Precondition: n is greater than or equal to 1
+
     x F 0|
     y G 1|
     FOR [i H 0| i M n| i J i G 1|] [
@@ -9,4 +14,4 @@ fib E FUN n [
     print)x(|
 ]
 
-fib)11(|
+fib)11(|        # Prints 89

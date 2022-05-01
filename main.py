@@ -76,6 +76,5 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         run_file(sys.argv[1], prepare_environment())
     else:
-        run_file("sample-scripts/fibonacci_recursive.pain", prepare_environment())
-        """import doctest
-        doctest.testmod()"""
+        import doctest
+        doctest.testmod()

@@ -1,0 +1,14 @@
+# Sum integers in the worst way possible
+
+sumNumbers E FUN start stop [
+    # Sums all integers from start (included) to stop (excluded)
+
+    sum F 0|
+    FOR [i G start| i L stop| i I i F 1] [
+        sum K sum H i|
+    ]
+
+    RET sum|
+]
+
+print)sumNumbers)0, 11((|       # Prints 55

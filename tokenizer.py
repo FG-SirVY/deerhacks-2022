@@ -3,7 +3,7 @@ from typing import Union
 
 
 ROTATING_TOKEN_COUNT = 17
-ROTATING_TOKEN_OFFSET = 19
+ROTATING_TOKEN_OFFSET = 20
 
 
 class TokenType(enum.Enum):
@@ -18,39 +18,40 @@ class TokenType(enum.Enum):
     UNKNOWN = 0
     EOF = 1
     EOL = 2
-    COMMA = 3
-    RETURN = 4
-    OPEN_PAR = 5
-    CLOSING_PAR = 6
-    OPEN_BLOCK = 7
-    CLOSING_BLOCK = 8
-    NAME = 9
-    INT = 10
-    FLOAT = 11
-    STRING = 12
-    IF = 13
-    ELIF = 14
-    ELSE = 15
-    FOR_LOOP = 16
-    WHILE_LOOP = 17
-    FUNC_DECL = 18
-    ADD = 19 #A
-    SUBTRACT = 20 #B
-    MULTIPLY = 21 #C
-    DIVIDE = 22 #D
-    ASSIGN = 23 #E
-    EQUAL = 24 #F
-    GREATER_THAN = 25 #G
-    GREATER_EQUAL = 26 #H
-    LESS_THAN = 27 #I
-    LESS_EQUAL = 28 #J
-    TO_INT = 29 #K
-    TO_FLOAT = 30 #L
-    TO_BOOL = 31 #M
-    NOT = 32 #N
-    AND = 33 #O
-    OR = 34 #P
-    MOD = 35 #Q
+    COMMENT_START = 3
+    COMMA = 4
+    RETURN = 5
+    OPEN_PAR = 6
+    CLOSING_PAR = 7
+    OPEN_BLOCK = 8
+    CLOSING_BLOCK = 9
+    NAME = 10
+    INT = 11
+    FLOAT = 12
+    STRING = 13
+    IF = 14
+    ELIF = 15
+    ELSE = 16
+    FOR_LOOP = 17
+    WHILE_LOOP = 18
+    FUNC_DECL = 19
+    ADD = 20 #A
+    SUBTRACT = 21 #B
+    MULTIPLY = 22 #C
+    DIVIDE = 23 #D
+    ASSIGN = 24 #E
+    EQUAL = 25 #F
+    GREATER_THAN = 26 #G
+    GREATER_EQUAL = 27 #H
+    LESS_THAN = 28 #I
+    LESS_EQUAL = 29 #J
+    TO_INT = 30 #K
+    TO_FLOAT = 31 #L
+    TO_BOOL = 32 #M
+    NOT = 33 #N
+    AND = 34 #O
+    OR = 35 #P
+    MOD = 36 #Q
 
 
     def is_operator(self):
@@ -295,6 +296,20 @@ class Tokenizer:
 
         if self.index >= len(self.script):
             return Token(TokenType.EOF)
+
+        while self.script[self.index] == "#":
+            while self.index < len(self.script) and self.script[self.index] != "\n":
+                self.index += 1
+            self.index += 1
+
+            if self.index >= len(self.script):
+                return Token(TokenType.EOF)
+
+            while self.index < len(self.script) and self.script[self.index].isspace():
+                self.index += 1
+
+        while self.index < len(self.script) and self.script[self.index].isspace():
+            self.index += 1
 
         if self.script[self.index] == ")":
             return Token(TokenType.OPEN_PAR)

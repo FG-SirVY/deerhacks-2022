@@ -1,4 +1,9 @@
+# Recursively calculate the nth Fibonacci number
+
 fib E FUN n [
+    # Determine nth Fibonacci number recursively
+    # Precondition: n is greater than or equal to 1
+
     IF n K 2 [
         RET 1|
     ] ELSE [
@@ -6,4 +11,4 @@ fib E FUN n [
     ]
 ]
 
-print)fib)10((|
+print)fib)10((|     # Prints 55

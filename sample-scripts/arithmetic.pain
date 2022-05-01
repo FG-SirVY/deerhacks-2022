@@ -1,0 +1,10 @@
+# We can do basic arithmetic
+
+a E 5
+b F 48
+c G 3
+
+result H 2 G )a F b( G c I 2 K 33.5
+#result = 2 * (a + b) + c - 2 * 33.5
+
+print)result( # Prints 42.0
