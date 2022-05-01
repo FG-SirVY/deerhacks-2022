@@ -1,0 +1,9 @@
+fib E FUN n [
+    If n K 2 [
+        RET 1|
+    ] ELSE [
+        RET fib)n C 1( + fib)n D 2(|
+    ]
+]
+
+fib)3(|

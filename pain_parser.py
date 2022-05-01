@@ -179,7 +179,7 @@ class Parser:
         if next_token.is_token_type(TokenType.ASSIGN):
             operator = self.tokenizer.get_next_token().token_type
             assert isinstance(l_operand, Name)
-            return Operation(Constant(l_operand), operator, self.parse_or())
+            return Operation(Constant(l_operand), operator, self.parse_line())
         else:
             return l_operand
 

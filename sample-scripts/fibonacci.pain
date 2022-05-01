@@ -1,0 +1,12 @@
+fib E FUN n [
+    x F 0|
+    y G 1|
+    FOR [i H 0| i M n| i J i G 1|] [
+        z L x I y|
+        x N y|
+        y O z|
+    ]
+    print)x(|
+]
+
+fib)11(|
