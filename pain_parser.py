@@ -37,46 +37,106 @@ class Parser:
 
 
     def parse_parentheses(self) -> Expression:
-        self.tokenizer.get_next_token()
-        l_operand = self.parse_term(self.parse_line())
-        self.tokenizer.get_next_token()
-        return self.parse_term(l_operand)
+        next_token = self.tokenizer.peek_next_token()
 
-
-    def parse_mul_div(self, l_operand) -> Expression:
-        operator = self.tokenizer.get_next_token().token_type
-        right = self.tokenizer.peek_next_token()
-
-        if right.is_token_type(TokenType.OPEN_PAR):
-            return self.parse_term(Operation(l_operand, operator,
-                self.parse_parentheses()))
+        if next_token.is_token_type(TokenType.OPEN_PAR):
+            self.tokenizer.get_next_token()
+            term = self.parse_comparison()
+            self.tokenizer.get_next_token()
+            return term
         else:
-            r_operand = self.get_as_expression(self.tokenizer.get_next_token())
-            return self.parse_term(Operation(l_operand, operator, r_operand))       
+            return self.get_as_expression(self.tokenizer.get_next_token())
 
 
-    def parse_add_sub(self, l_operand) -> Expression:
-        operator = self.tokenizer.get_next_token().token_type
-        return Operation(l_operand, operator, self.parse_line())
+    def parse_mul_div(self) -> Expression:
+        l_operand = self.parse_parentheses()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.MULTIPLY) \
+            or next_token.is_token_type(TokenType.DIVIDE):
+            operator = self.tokenizer.get_next_token().token_type
+            right = self.tokenizer.peek_next_token()
+
+            if right.is_token_type(TokenType.OPEN_PAR):
+                return Operation(l_operand, operator, self.parse_parentheses())
+            else:
+                r_operand = self.get_as_expression(self.tokenizer.get_next_token())
+                return Operation(l_operand, operator, r_operand)
+        else:
+            return l_operand
+
+
+    def parse_add_sub(self) -> Expression:
+        l_operand = self.parse_mul_div()
+        next_token = self.tokenizer.peek_next_token()
+        
+        if next_token.is_token_type(TokenType.ADD) \
+            or next_token.is_token_type(TokenType.SUBTRACT):
+
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(l_operand, operator, self.parse_line())
+        else:
+            return l_operand
 
     
-    def parse_assignment(self, l_operand) -> Expression:
-        operator = self.tokenizer.get_next_token().token_type
-        return Operation(Constant(l_operand), operator, self.parse_line())
+    def parse_assignment(self) -> Expression:
+        l_operand = self.parse_add_sub()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.ASSIGN):
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(Constant(l_operand), operator, self.parse_line())
+        else:
+            return l_operand
+
+
+    def parse_invocation(self) -> Expression:
+        l_operand = self.parse_assignment()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.OPEN_PAR):
+            self.tokenizer.get_next_token()
+            arguments = []
+            next_operator = TokenType.COMMA
+            while next_operator == TokenType.COMMA:
+                arguments.append(self.parse_line())
+                next_operator = self.tokenizer.get_next_token().token_type
+
+            assert next_operator == TokenType.CLOSING_PAR
+
+            return Invocation(l_operand.name, arguments)
+        else:
+            return l_operand
 
     
-    def parse_invocation(self, name: Name) -> Expression:
-        assert self.tokenizer.get_next_token().token_type == TokenType.OPEN_PAR
+    def parse_term(self) -> Expression:
+        left = self.tokenizer.peek_next_token()
 
-        arguments = []
-        next_operator = TokenType.COMMA
-        while next_operator == TokenType.COMMA:
-            arguments.append(self.parse_line())
-            next_operator = self.tokenizer.get_next_token().token_type
+        if left.is_operator():
+            return self.parse_unitary_operator()
+        elif left.is_token_type(TokenType.INT) \
+            or left.is_token_type(TokenType.FLOAT) \
+            or left.is_token_type(TokenType.STRING) \
+            or left.is_token_type(TokenType.OPEN_PAR) \
+            or left.is_token_type(TokenType.NAME):
+            return self.parse_invocation()
+        else:
+            return None
 
-        assert next_operator == TokenType.CLOSING_PAR
 
-        return Invocation(name.name, arguments)
+    def parse_comparison(self) -> Expression:
+        l_operand = self.parse_term()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.LESS_EQUAL) \
+            or next_token.is_token_type(TokenType.LESS_THAN) \
+            or next_token.is_token_type(TokenType.GREATER_EQUAL) \
+            or next_token.is_token_type(TokenType.GREATER_THAN):
+
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(l_operand, operator, self.parse_line())
+        else:
+            return l_operand
 
 
     def parse_block(self) -> Expression:
@@ -97,27 +157,6 @@ class Parser:
         block = self.parse_block()
 
         return IfBlock([(condition, block)])
-
-    
-    def parse_term(self, l_operand) -> Expression:
-        operator = self.tokenizer.peek_next_token()
-
-        if operator.is_token_type(TokenType.MULTIPLY) \
-            or operator.is_token_type(TokenType.DIVIDE):
-            return self.parse_mul_div(l_operand)
-        elif operator.is_token_type(TokenType.ADD) \
-            or operator.is_token_type(TokenType.SUBTRACT):
-            return self.parse_add_sub(l_operand)
-        elif operator.is_token_type(TokenType.ASSIGN):
-            return self.parse_assignment(l_operand)
-        elif operator.is_token_type(TokenType.OPEN_PAR):
-            return self.parse_invocation(l_operand)
-        elif operator.is_token_type(TokenType.EOF) \
-            or operator.is_token_type(TokenType.EOL):
-            self.tokenizer.get_next_token()
-            return l_operand
-        else:
-            return l_operand
 
 
     def parse_line(self) -> Expression:
@@ -152,22 +191,28 @@ class Parser:
         >>> parsed.evaluate(env)
         >>> env.get_value("test")
         4
+        >>> env = Environment({})
+        >>> parsed = Parser("4 H 4").parse_line()
+        >>> parsed
+        Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>
+        >>> parsed.evaluate(env)
+        True
         """
         left = self.tokenizer.peek_next_token()
 
-        if left.is_operator():
-            return self.parse_unitary_operator()
-        elif left.is_token_type(TokenType.OPEN_PAR):
-            return self.parse_parentheses()
-        elif left.is_token_type(TokenType.CONDITIONAL):
+        while left.is_token_type(TokenType.EOL) \
+            or left.is_token_type(TokenType.CLOSING_BLOCK):
+            self.tokenizer.get_next_token()
+            left = self.tokenizer.peek_next_token()
+
+        if left.is_token_type(TokenType.CONDITIONAL):
             return self.parse_conditional()
-        elif left.is_token_type(TokenType.EOF) or left.is_token_type(TokenType.EOL):
-            return None
-        elif left.is_token_type(TokenType.CLOSING_BLOCK):
-            return None
+        elif not left.is_token_type(TokenType.EOF) and not left.is_token_type(TokenType.EOL) \
+            and not left.is_token_type(TokenType.CLOSING_BLOCK) \
+            and not left.is_token_type(TokenType.CLOSING_PAR):
+            return self.parse_comparison()
         else:
-            l_operand = self.get_as_expression(self.tokenizer.get_next_token())
-            return self.parse_term(l_operand)
+            return None
             
 
 if __name__ == "__main__":

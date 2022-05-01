@@ -2,7 +2,7 @@ import enum
 from typing import Union
 
 
-ROTATING_TOKEN_COUNT = 16
+ROTATING_TOKEN_COUNT = 17
 ROTATING_TOKEN_OFFSET = 16
 
 
@@ -36,17 +36,18 @@ class TokenType(enum.Enum):
     MULTIPLY = 18 #C
     DIVIDE = 19 #D
     ASSIGN = 20 #E
-    GREATER_THAN = 21 #F
-    GREATER_EQUAL = 22 #G
-    LESS_THAN = 23 #H
-    LESS_EQUAL = 24 #I
-    TO_INT = 25 #J
-    TO_FLOAT = 26 #K
-    TO_BOOL = 27 #L
-    NOT = 28 #M
-    AND = 29 #N
-    OR = 30 #O
-    MOD = 31 #P
+    EQUAL = 21 #F
+    GREATER_THAN = 22 #G
+    GREATER_EQUAL = 23 #H
+    LESS_THAN = 24 #I
+    LESS_EQUAL = 25 #J
+    TO_INT = 26 #K
+    TO_FLOAT = 27 #L
+    TO_BOOL = 28 #M
+    NOT = 29 #N
+    AND = 30 #O
+    OR = 31 #P
+    MOD = 32 #Q
 
 
     def is_operator(self):
