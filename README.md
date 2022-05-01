@@ -1,5 +1,5 @@
 ﻿# deerhacks-2022
-##Supported functions
+## Supported functions
 * print
 * +, -, \*, /, mod
 * = (variable assignment)
