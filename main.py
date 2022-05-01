@@ -29,10 +29,12 @@ def run_file(fname: str, env: Environment) -> None:
     Test
     >>> run_file("test-scripts/min_max_print.pain", prepare_environment())
     6
-    >>> run_file("test-scripts\complex_arithmetic_and_builtins.pain", prepare_environment())
+    >>> run_file("test-scripts/complex_arithmetic_and_builtins.pain", prepare_environment())
     432
-    >>> run_file("test-scripts\if_stmt.pain", prepare_environment())
+    >>> run_file("test-scripts/if_stmt.pain", prepare_environment())
     10
+    >>> run_file("test-scripts/assign_print_test.pain", prepare_environment())
+    3
     """
     expressions: list[Expression] = []
 
