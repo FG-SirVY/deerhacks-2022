@@ -1,4 +1,4 @@
-from expression import Block, Expression, IfBlock, Invocation, Name, Operation, Constant, Environment
+from expression import Block, Expression, IfBlock, Invocation, Name, Operation, Constant, Environment, ForLoop, WhileLoop
 from tokenizer import Tokenizer, TokenType, Token
 
 
@@ -159,6 +159,29 @@ class Parser:
         block = self.parse_block()
 
         return IfBlock([(condition, block)])
+    
+
+    def parse_while_loop(self) -> Expression:
+        self.tokenizer.get_next_token()
+        condition = self.parse_line()
+        block = self.parse_block()
+        return WhileLoop(condition, block)
+
+
+    def parse_for_loop(self) -> Expression:
+        self.tokenizer.get_next_token()
+        next_token = self.tokenizer.get_next_token()
+        assert next_token.is_token_type(TokenType.OPEN_BLOCK)
+        
+        cond_exprs = []
+        expr = self.parse_line()
+        while expr is not None:
+            cond_exprs.append(expr)
+            expr = self.parse_line()
+        assert len(cond_exprs) == 3
+
+        block = self.parse_block()
+        return ForLoop(cond_exprs[0], cond_exprs[1], cond_exprs[2], block)
 
 
     def parse_line(self) -> Expression:
@@ -205,18 +228,22 @@ class Parser:
         IfBlock<[(Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>, Block<[Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<10>>]>)]>
         >>> parsed.evaluate(env)    
         """
-        left = self.tokenizer.peek_next_token()
+        right = self.tokenizer.peek_next_token()
 
-        while left.is_token_type(TokenType.EOL) \
-            or left.is_token_type(TokenType.CLOSING_BLOCK):
+        while right.is_token_type(TokenType.EOL) \
+            or right.is_token_type(TokenType.CLOSING_BLOCK):
             self.tokenizer.get_next_token()
-            left = self.tokenizer.peek_next_token()
+            right = self.tokenizer.peek_next_token()
 
-        if left.is_token_type(TokenType.CONDITIONAL):
+        if right.is_token_type(TokenType.CONDITIONAL):
             return self.parse_conditional()
-        elif not left.is_token_type(TokenType.EOF) and not left.is_token_type(TokenType.EOL) \
-            and not left.is_token_type(TokenType.CLOSING_BLOCK) \
-            and not left.is_token_type(TokenType.CLOSING_PAR):
+        elif right.is_token_type(TokenType.WHILE_LOOP):
+            return self.parse_while_loop()
+        elif right.is_token_type(TokenType.FOR_LOOP):
+            return self.parse_for_loop()
+        elif not right.is_token_type(TokenType.EOF) and not right.is_token_type(TokenType.EOL) \
+            and not right.is_token_type(TokenType.CLOSING_BLOCK) \
+            and not right.is_token_type(TokenType.CLOSING_PAR):
             return self.parse_comparison()
         else:
             return None

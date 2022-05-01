@@ -68,6 +68,12 @@ class Environment:
         self.local_vars = local_vars
         self.parent_env = parent_env
     
+    def get_parent_vars(self) -> list[str]:
+        if self.parent_env is not None:
+            return list(self.parent_env.local_vars.keys()) \
+                + self.parent_env.get_parent_vars()
+        return []
+    
     def get_value(self, name: str) -> Any:
         if name in self.local_vars:
             return self.local_vars[name]
@@ -409,6 +415,9 @@ class Constant(Expression):
 
 class Name(Expression):
     """
+    Named reference to a variable in an environment.
+
+    name: the name
     """
     name: str
 
@@ -537,6 +546,8 @@ class RetVal(Constant):
 class Block(Expression):
     """
     An executable sequence of expressions.
+
+    steps: the sequence of expressions to be executed
     """
     steps: list[Expression]
 
@@ -549,8 +560,20 @@ class Block(Expression):
     
     def evaluate(self, env: Environment) -> Any:
         """
+        Step through expressions in self.steps and evaluate them.
+        If any expression evaluates to a RetVal, this result is returned
+        immediately and execution halts.
+
         Throws if:
             - any step fails to evaluate
+        
+        >>> env = Environment({})
+        >>> blk = Block([ \
+                Operation(Constant(Name('x')), TokenType.ASSIGN, Constant(5)), \
+                Operation(None, TokenType.RETURN, Name('x')) \
+            ])
+        >>> blk.evaluate(env).evaluate(env)
+        5
         """
         for step in self.steps:
             result = step.evaluate(env)
@@ -563,7 +586,9 @@ class Block(Expression):
 
 class IfBlock(Expression):
     """
-    A branch where the execution of each Block depends on the preceding 
+    A branch where the execution of each block is contingent on its associated
+    expression evaluating to True. If it is False, the next condition is
+    checked.
     """
     steps: list[tuple[Expression, Block]]
 
@@ -592,6 +617,85 @@ class IfBlock(Expression):
                 result = step[1].evaluate(Environment({}, env))
                 if isinstance(result, Error):
                     result.append("", self.origin)
+                return result
+
+
+class WhileLoop(Expression):
+    """
+    """
+    cond: Expression
+    code: Block
+
+    def __init__(self, cond: Expression, code: Block, origin: int = -1):
+        Expression.__init__(self, origin)
+        self.cond = cond
+        self.code = code
+    
+    def evaluate(self, env: Environment):
+        """
+        """
+        while True:
+            cond = self.cond.evaluate(env)
+            if isinstance(cond, Error):
+                cond.append("", self.origin)
+                return cond
+            if not cond:
+                break
+            result = self.code.evaluate(Environment({}, env))
+            if isinstance(result, Error):
+                result.append("", self.origin)
+                return result
+            elif isinstance(result, RetVal):
+                return result
+
+
+class ForLoop(Expression):
+    """
+    """
+    first: Expression
+    cond: Expression
+    on_rpt: Expression
+    code: Block
+
+    def __init__(self, first: Expression, cond: Expression, on_rpt: Expression, 
+                 code: Block, origin: int = -1):
+        Expression.__init__(self, origin)
+        self.first = first
+        self.cond = cond
+        self.on_rpt = on_rpt
+        self.code = code
+
+    def evaluate(self, env: Environment) -> Any:
+        """
+        """
+        loop_env = Environment({}, env)
+        result = self.first.evaluate(loop_env)
+        if isinstance(result, Error):
+            result.append("", self.origin)
+            return result
+        elif isinstance(result, RetVal):
+            return result
+        
+        while True:
+            cond = self.cond.evaluate(loop_env)
+            if isinstance(cond, Error):
+                cond.append("", self.origin)
+                return cond
+            if not cond:
+                break
+
+            result = self.code.evaluate(Environment({}, env))
+            if isinstance(result, Error):
+                result.append("", self.origin)
+                return result
+            elif isinstance(result, RetVal):
+                return result
+            
+            result = self.on_rpt.evaluate(loop_env)
+            if isinstance(result, Error):
+                result.append("", self.origin)
+                return result
+            elif isinstance(result, RetVal):
                 return result
 
 
@@ -650,9 +754,13 @@ class Builtin(Expression):
                 arg.append("", self.origin)
                 return arg
             args.append(arg)
-        result = self.func(*args)
+        try:
+            result = self.func(*args)
+        except Exception as e:
+            return Error(str(e), self.origin)
         if isinstance(result, Error):
             result.append("", self.origin)
+            return result
         return RetVal(result)
 
 
