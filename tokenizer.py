@@ -141,13 +141,13 @@ class Tokenizer:
         PRECONDITIONS:
         The current character is " and the string ends somewhere.
         """
-        start = self.index
+        start = self.index + 1
         self.index += 1
 
         while self.index < len(self.script) and self.script[self.index] != "\"":
             self.index += 1
 
-        return Token(TokenType.STRING, int(self.script[start:self.index]))
+        return Token(TokenType.STRING, self.script[start:self.index])
 
 
     def _get_operator_token_from(self, operator_string: str) -> Token:

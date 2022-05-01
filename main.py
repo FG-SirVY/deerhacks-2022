@@ -30,6 +30,8 @@ def run_file(fname: str, env: Environment) -> None:
     432
     >>> run_file("test-scripts\if_stmt.pain", prepare_environment())
     10
+    >>> run_file("test-scripts\print_string.pain", prepare_environment())
+    Te st
     """
     expressions: list[Expression] = []
 
