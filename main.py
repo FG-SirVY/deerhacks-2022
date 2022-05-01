@@ -35,6 +35,12 @@ def run_file(fname: str, env: Environment) -> None:
     10
     >>> run_file("test-scripts/assign_print_test.pain", prepare_environment())
     3
+    >>> run_file("test-scripts/modulo.pain", prepare_environment())
+    1
+    >>> run_file("test-scripts/and_or.pain", prepare_environment())
+    True
+    False
+    True
     """
     expressions: list[Expression] = []
 

@@ -53,7 +53,8 @@ class Parser:
         next_token = self.tokenizer.peek_next_token()
 
         if next_token.is_token_type(TokenType.MULTIPLY) \
-            or next_token.is_token_type(TokenType.DIVIDE):
+            or next_token.is_token_type(TokenType.DIVIDE) \
+            or next_token.is_token_type(TokenType.MOD):
             operator = self.tokenizer.get_next_token().token_type
             right = self.tokenizer.peek_next_token()
 
@@ -78,9 +79,31 @@ class Parser:
         else:
             return l_operand
 
+
+    def parse_and(self) -> Expression:
+        l_operand = self.parse_add_sub()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.AND):
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(l_operand, operator, self.parse_line())
+        else:
+            return l_operand
+
+    
+    def parse_or(self):
+        l_operand = self.parse_and()
+        next_token = self.tokenizer.peek_next_token()
+
+        if next_token.is_token_type(TokenType.OR):
+            operator = self.tokenizer.get_next_token().token_type
+            return Operation(l_operand, operator, self.parse_line())
+        else:
+            return l_operand
+
     
     def parse_assignment(self) -> Expression:
-        l_operand = self.parse_add_sub()
+        l_operand = self.parse_or()
         next_token = self.tokenizer.peek_next_token()
 
         if next_token.is_token_type(TokenType.ASSIGN):
@@ -226,6 +249,14 @@ class Parser:
         >>> parsed = Parser("IF 4 H 4 [test F 10]").parse_line()
         >>> parsed
         IfBlock<[(Operation<Constant<4>, TokenType.GREATER_EQUAL, Constant<4>>, Block<[Operation<Constant<Name<test>>, TokenType.ASSIGN, Constant<10>>]>)]>
+        >>> env = Environment({})
+        >>> Parser("9 Q 4").parse_line().evaluate(env)
+        True
+        >>> tree = Parser("1 P 0").parse_line()
+        >>> tree
+        Operation<Constant<1>, TokenType.OR, Constant<0>>
+        >>> tree.evaluate(env)
+        True
         """
         right = self.tokenizer.peek_next_token()
 

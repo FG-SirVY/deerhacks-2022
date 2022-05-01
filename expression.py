@@ -324,7 +324,7 @@ class Operators:
         Throws if:
             - <args> does not have exactly 2 objects of type bool
         """
-        if len(args) != 1:
+        if len(args) != 2:
             return Error("AND operator requires exactly 2 operands.")
         try:
             return bool(args[0]) and bool(args[1])
@@ -337,7 +337,7 @@ class Operators:
         Throws if:
             - <args> does not have exactly 2 objects of type bool
         """
-        if len(args) != 1:
+        if len(args) != 2:
             return Error("OR operator requires exactly 2 operands.")
         try:
             return bool(args[0]) or bool(args[1])
