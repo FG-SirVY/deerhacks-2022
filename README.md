@@ -7,3 +7,5 @@
 * Conversions
   * To: int, float, bool
 * boolean operators: not, and, or
+* Statements:
+ * For, while, if
