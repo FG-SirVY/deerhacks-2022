@@ -24,12 +24,21 @@ def run_file(fname: str, env: Environment) -> None:
     432
     >>> run_file("test-scripts/print.pain", prepare_environment())
     5
+    5
     >>> run_file("test-scripts/min_max_print.pain", prepare_environment())
     6
-    >>> run_file("test-scripts\complex_arithmetic_and_builtins.pain", prepare_environment())
+    >>> run_file("test-scripts/complex_arithmetic_and_builtins.pain", prepare_environment())
     432
-    >>> run_file("test-scripts\if_stmt.pain", prepare_environment())
+    >>> run_file("test-scripts/if_stmt.pain", prepare_environment())
     10
+    >>> run_file("test-scripts/more_tests.pain", prepare_environment())
+    print
+    a is less than b
+    >>> env = Environment({})
+    >>> run_file("test-scripts/reuse_test.pain", env)
+    3
+    >>> env.get_value("a")
+    3
     """
     expressions: list[Expression] = []
 
