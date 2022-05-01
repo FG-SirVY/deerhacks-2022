@@ -1,0 +1,15 @@
+a E 1|
+b F 2|
+print)"print"(
+
+IF a K b [
+    print)"a is less than b"(
+]
+
+IF a M b [
+    print)"a is greater than b"(
+]
+
+IF a J b [
+    print)"a is equal to b"(
+]
