@@ -213,15 +213,28 @@ class Parser:
         return Block(expressions)
 
 
-    def parse_conditional(self) -> Expression:
+    def parse_conditional(self, has_cond=False) -> Expression:
         """
         Parse an "if" conditional statement.
         """
         self.tokenizer.get_next_token()
-        condition = self.parse_line()
+        condition = self.parse_line() if has_cond else Constant(True)
         block = self.parse_block()
-
-        return IfBlock([(condition, block)])
+        branches = [(condition, block)]
+        
+        right = self.tokenizer.peek_next_token()
+        while right.is_token_type(TokenType.EOL) \
+            or right.is_token_type(TokenType.CLOSING_BLOCK):
+            self.tokenizer.get_next_token()
+            right = self.tokenizer.peek_next_token()
+        
+        if has_cond:
+            if right.is_token_type(TokenType.ELIF):
+                branches += self.parse_conditional(True).steps
+            elif right.is_token_type(TokenType.ELSE):
+                branches += self.parse_conditional(False).steps
+        
+        return IfBlock(branches)
     
 
     def parse_while_loop(self) -> Expression:
@@ -248,6 +261,8 @@ class Parser:
             cond_exprs.append(expr)
             expr = self.parse_line()
         assert len(cond_exprs) == 3
+
+        self.tokenizer.get_next_token()
 
         block = self.parse_block()
         return ForLoop(cond_exprs[0], cond_exprs[1], cond_exprs[2], block)
@@ -330,8 +345,8 @@ class Parser:
             self.tokenizer.get_next_token()
             right = self.tokenizer.peek_next_token()
 
-        if right.is_token_type(TokenType.CONDITIONAL):
-            return self.parse_conditional()
+        if right.is_token_type(TokenType.IF):
+            return self.parse_conditional(True)
         elif right.is_token_type(TokenType.WHILE_LOOP):
             return self.parse_while_loop()
         elif right.is_token_type(TokenType.FOR_LOOP):

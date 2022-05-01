@@ -1,0 +1,11 @@
+test E 4|
+IF test H 3 [
+    WHILE test K 5 [
+        print)test(|
+        test H test E 1|
+    ]
+] ELSE [
+    FOR [i J 0|i P test|i L i I 1] [
+        print)i(|
+    ]
+]

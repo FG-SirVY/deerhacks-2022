@@ -685,6 +685,9 @@ class WhileLoop(Expression):
         Expression.__init__(self, origin)
         self.cond = cond
         self.code = code
+
+    def __repr__(self) -> str:
+        return f"WhileLoop<{self.cond}, {self.code}>"
     
     def evaluate(self, env: Environment):
         """
@@ -693,6 +696,8 @@ class WhileLoop(Expression):
 
         Throws if:
             - the condition fails to evaluate
+            - the condition evaluates to a non bool type, and the type cannot be
+                converted to a bool
             - the code block fails to execute
         
         >>> b_print = Function(['x'], Block([Builtin(print, [Name('x')])]))
@@ -711,18 +716,25 @@ class WhileLoop(Expression):
         1
         """
         while True:
-            cond = self.cond.evaluate(env)
-            if isinstance(cond, Error):
-                cond.append("", self.origin)
-                return cond
-            if not cond:
-                break
-            result = self.code.evaluate(Environment({}, env))
-            if isinstance(result, Error):
-                result.append("", self.origin)
-                return result
-            elif isinstance(result, RetVal):
-                return result
+            if self.cond is not None:
+                cond = self.cond.evaluate(env)
+                if isinstance(cond, Error):
+                    cond.append("", self.origin)
+                    return cond
+                if not isinstance(cond, bool):
+                    try:
+                        cond = bool(cond)
+                    except TypeError as te:
+                        return Error(str(te))
+                if not cond:
+                    break
+            if self.code is not None:
+                result = self.code.evaluate(Environment({}, env))
+                if isinstance(result, Error):
+                    result.append("", self.origin)
+                    return result
+                elif isinstance(result, RetVal):
+                    return result
 
 
 class ForLoop(Expression):
@@ -748,6 +760,9 @@ class ForLoop(Expression):
         self.cond = cond
         self.on_rpt = on_rpt
         self.code = code
+
+    def __repr__(self) -> str:
+        return f"ForLoop<[{self.first}, {self.cond}, {self.on_rpt}], {self.code}>"
 
     def evaluate(self, env: Environment) -> Any:
         """
@@ -783,34 +798,42 @@ class ForLoop(Expression):
         4
         """
         loop_env = Environment({}, env)
-        result = self.first.evaluate(loop_env)
-        if isinstance(result, Error):
-            result.append("", self.origin)
-            return result
-        elif isinstance(result, RetVal):
-            return result
-        
+        if self.first is not None:
+            result = self.first.evaluate(loop_env)
+            if isinstance(result, Error):
+                result.append("", self.origin)
+                return result
+            elif isinstance(result, RetVal):
+                return result
         while True:
-            cond = self.cond.evaluate(loop_env)
-            if isinstance(cond, Error):
-                cond.append("", self.origin)
-                return cond
-            if not cond:
-                break
-
-            result = self.code.evaluate(loop_env)
-            if isinstance(result, Error):
-                result.append("", self.origin)
-                return result
-            elif isinstance(result, RetVal):
-                return result
+            if self.cond is not None:
+                cond = self.cond.evaluate(loop_env)
+                if isinstance(cond, Error):
+                    cond.append("", self.origin)
+                    return cond
+                if not isinstance(cond, bool):
+                    try:
+                        cond = bool(cond)
+                    except TypeError as te:
+                        return Error(str(te))
+                if not cond:
+                    break
             
-            result = self.on_rpt.evaluate(loop_env)
-            if isinstance(result, Error):
-                result.append("", self.origin)
-                return result
-            elif isinstance(result, RetVal):
-                return result
+            if self.code is not None:
+                result = self.code.evaluate(loop_env)
+                if isinstance(result, Error):
+                    result.append("", self.origin)
+                    return result
+                elif isinstance(result, RetVal):
+                    return result
+            
+            if self.on_rpt is not None:
+                result = self.on_rpt.evaluate(loop_env)
+                if isinstance(result, Error):
+                    result.append("", self.origin)
+                    return result
+                elif isinstance(result, RetVal):
+                    return result
 
 
 class Function(Expression):

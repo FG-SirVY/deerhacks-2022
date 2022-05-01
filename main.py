@@ -52,6 +52,8 @@ def run_file(fname: str, env: Environment) -> None:
     True
     False
     True
+    >>> run_file("test-scripts/if_elif.pain", prepare_environment())
+    4 == 4 (3)
     """
     expressions: list[Expression] = []
 
@@ -67,10 +69,14 @@ def run_file(fname: str, env: Environment) -> None:
                 break
 
     for e in expressions:
-        #print(e)
+        print(e)
         e.evaluate(env)
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    if len(sys.argv) == 2:
+        run_file(sys.argv[1], prepare_environment())
+    else:
+        run_file("test-scripts/if_for_while.pain", prepare_environment())
+        """import doctest
+        doctest.testmod()"""

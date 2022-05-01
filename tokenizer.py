@@ -3,7 +3,7 @@ from typing import Union
 
 
 ROTATING_TOKEN_COUNT = 17
-ROTATING_TOKEN_OFFSET = 17
+ROTATING_TOKEN_OFFSET = 19
 
 
 class TokenType(enum.Enum):
@@ -28,27 +28,29 @@ class TokenType(enum.Enum):
     INT = 10
     FLOAT = 11
     STRING = 12
-    CONDITIONAL = 13
-    FOR_LOOP = 14
-    WHILE_LOOP = 15
-    FUNC_DECL = 16
-    ADD = 17 #A
-    SUBTRACT = 18 #B
-    MULTIPLY = 19 #C
-    DIVIDE = 20 #D
-    ASSIGN = 21 #E
-    EQUAL = 22 #F
-    GREATER_THAN = 23 #G
-    GREATER_EQUAL = 24 #H
-    LESS_THAN = 25 #I
-    LESS_EQUAL = 26 #J
-    TO_INT = 27 #K
-    TO_FLOAT = 28 #L
-    TO_BOOL = 29 #M
-    NOT = 30 #N
-    AND = 31 #O
-    OR = 32 #P
-    MOD = 33 #Q
+    IF = 13
+    ELIF = 14
+    ELSE = 15
+    FOR_LOOP = 16
+    WHILE_LOOP = 17
+    FUNC_DECL = 18
+    ADD = 19 #A
+    SUBTRACT = 20 #B
+    MULTIPLY = 21 #C
+    DIVIDE = 22 #D
+    ASSIGN = 23 #E
+    EQUAL = 24 #F
+    GREATER_THAN = 25 #G
+    GREATER_EQUAL = 26 #H
+    LESS_THAN = 27 #I
+    LESS_EQUAL = 28 #J
+    TO_INT = 29 #K
+    TO_FLOAT = 30 #L
+    TO_BOOL = 31 #M
+    NOT = 32 #N
+    AND = 33 #O
+    OR = 34 #P
+    MOD = 35 #Q
 
 
     def is_operator(self):
@@ -196,7 +198,11 @@ class Tokenizer:
             keyword = self.script[start:self.index]
 
             if keyword == "IF":
-                return Token(TokenType.CONDITIONAL)
+                return Token(TokenType.IF)
+            elif keyword == "ELIF":
+                return Token(TokenType.ELIF)
+            elif keyword == "ELSE":
+                return Token(TokenType.ELSE)
             elif keyword == "FOR":
                 return Token(TokenType.FOR_LOOP)
             elif keyword == "WHILE":
@@ -274,7 +280,7 @@ class Tokenizer:
         Token<Type: INT, Payload: 6>
         >>> t = Tokenizer("IF 5 H 5 [print)6(]")
         >>> t.get_next_token()
-        Token<Type: CONDITIONAL, Payload: None>
+        Token<Type: IF, Payload: None>
         """
         if self.next_token is not None:
             ret = self.next_token
